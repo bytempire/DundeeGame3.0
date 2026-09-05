@@ -46,4 +46,10 @@ const config = {
 const game = new Phaser.Game(config);
 window.__DUNDEE__ = game;
 
+// Lazy playtest helper for QA
+window.__runPlaytest = async (levels) => {
+  const { runPlaytest } = await import('./debug/playtest.js');
+  return runPlaytest(game, { levels });
+};
+
 export { WORLD_W, WORLD_H };

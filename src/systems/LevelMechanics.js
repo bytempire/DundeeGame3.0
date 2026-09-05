@@ -33,13 +33,24 @@ export default class LevelMechanics {
     return type;
   }
 
+  /** Set Arcade body size in world pixels (accounts for sprite scale). */
+  _setWorldBody(spr, worldW, worldH, worldOffsetX = 0, worldOffsetY = 0) {
+    const sx = Math.abs(spr.scaleX) || 1;
+    const sy = Math.abs(spr.scaleY) || 1;
+    spr.body.setSize(worldW / sx, worldH / sy, false);
+    spr.body.setOffset(worldOffsetX / sx, worldOffsetY / sy);
+  }
+
+  _markDamage(spr, on) {
+    spr.setData('damage', !!on);
+  }
+
   _spawn(cfg) {
     const type = cfg.type;
     const meta = MANIFEST[type] || {};
     const size = meta.size || meta.frameSize || [64, 64];
 
     if (type === 'finish_door') {
-      // Door is already drawn on the level background — keep an invisible trigger only.
       const spr = this.scene.add.image(cfg.x, cfg.y, 'finish_door_closed').setOrigin(0.5, 1);
       spr.setDisplaySize(size[0], size[1]);
       spr.setAlpha(0);
@@ -55,7 +66,8 @@ export default class LevelMechanics {
       spr.setDisplaySize(size[0], size[1]);
       spr.body.allowGravity = false;
       spr.body.setImmovable(true);
-      this._applyNormCollider(spr, size, meta.collider, 0.5, 1);
+      this._applyNormCollider(spr, size, meta.collider);
+      this._markDamage(spr, true);
       this.hazards.add(spr);
       this.items.push({ type, cfg, spr, state: 'active', damage: true });
       return;
@@ -67,18 +79,12 @@ export default class LevelMechanics {
       spr.setDisplaySize(96, 36);
       spr.body.allowGravity = false;
       spr.body.setImmovable(true);
+      this._setWorldBody(spr, 80, 28, 8, 4);
       spr.body.enable = false;
+      this._markDamage(spr, false);
       spr.play('spike_trap_anim');
       this.hazards.add(spr);
-      this.items.push({
-        type,
-        cfg,
-        spr,
-        state: 'idle',
-        phase: 0,
-        timer: 0,
-        cycle: { warn: 300, active: 420, cool: 900 },
-      });
+      this.items.push({ type, cfg, spr, state: 'idle', timer: 0 });
       return;
     }
 
@@ -86,7 +92,9 @@ export default class LevelMechanics {
       const spr = this.scene.physics.add.image(cfg.x, cfg.y, type);
       spr.setDisplaySize(size[0], size[1]);
       spr.body.allowGravity = false;
-      spr.body.setCircle(size[0] * 0.39, size[0] * 0.11, size[1] * 0.11);
+      const sx = spr.scaleX || 1;
+      spr.body.setCircle((size[0] * 0.38) / sx);
+      this._markDamage(spr, true);
       this.hazards.add(spr);
       this.items.push({
         type,
@@ -108,8 +116,8 @@ export default class LevelMechanics {
       spr.setDisplaySize(w, h);
       spr.body.allowGravity = false;
       spr.body.setImmovable(true);
-      spr.body.setSize(w, h * 0.65);
-      spr.body.setOffset(0, h * 0.1);
+      spr.body.moves = true;
+      this._setWorldBody(spr, w, h * 0.7, 0, h * 0.05);
       this.movers.add(spr);
       this.items.push({
         type,
@@ -120,8 +128,6 @@ export default class LevelMechanics {
         t: 0,
         broken: false,
         timer: 0,
-        touched: false,
-        visiblePhase: true,
       });
       return;
     }
@@ -131,9 +137,11 @@ export default class LevelMechanics {
       spr.setDisplaySize(size[0], size[1]);
       spr.body.allowGravity = false;
       spr.body.setImmovable(true);
-      this.hazards.add(spr);
-      // also solid when idle
+      this._setWorldBody(spr, size[0] * 0.9, size[1] * 0.9, size[0] * 0.05, size[1] * 0.05);
+      // solid platform; only damages while dropping
+      this._markDamage(spr, false);
       this.movers.add(spr);
+      this.hazards.add(spr);
       if (cfg.chain) {
         const chain = this.scene.add.image(cfg.x, cfg.y - size[1] / 2 - 24, 'chain_tile');
         chain.setDisplaySize(24, 48);
@@ -159,7 +167,8 @@ export default class LevelMechanics {
       spr.setDisplaySize(size[0], size[1]);
       spr.body.allowGravity = false;
       spr.body.setImmovable(true);
-      this._applyNormCollider(spr, size, meta.collider, 0.5, 0);
+      this._applyNormCollider(spr, size, meta.collider);
+      this._markDamage(spr, true);
       this.hazards.add(spr);
       this.items.push({
         type,
@@ -180,6 +189,9 @@ export default class LevelMechanics {
       spr.setDisplaySize(size[0], size[1]);
       spr.body.allowGravity = false;
       spr.body.setImmovable(true);
+      spr.body.moves = true;
+      this._applyNormCollider(spr, size, meta.collider || [0.1, 0.05, 0.8, 0.9]);
+      this._markDamage(spr, true);
       this.movers.add(spr);
       this.hazards.add(spr);
       this.items.push({
@@ -218,11 +230,12 @@ export default class LevelMechanics {
       const spr = this.scene.add.image(cfg.x, cfg.y, type);
       spr.setDisplaySize(size[0], size[1]);
       spr.setOrigin(pivot[0], pivot[1]);
-      // hazard body at ball tip — updated each frame
-      const hit = this.scene.physics.add.image(cfg.x, cfg.y + size[1] * 0.8, type);
+      const hit = this.scene.physics.add.image(cfg.x, cfg.y + size[1] * 0.8, 'solid_px');
       hit.setVisible(false);
+      hit.setDisplaySize(size[0] * 0.55, size[1] * 0.28);
       hit.body.allowGravity = false;
-      hit.body.setSize(size[0] * 0.55, size[1] * 0.28);
+      this._setWorldBody(hit, size[0] * 0.55, size[1] * 0.28);
+      this._markDamage(hit, true);
       this.hazards.add(hit);
       this.items.push({
         type,
@@ -230,10 +243,8 @@ export default class LevelMechanics {
         spr,
         hit,
         size,
-        pivot,
         state: 'active',
         damage: true,
-        angle: 0,
         amp: Phaser.Math.DegToRad(cfg.amp || 38),
         period: cfg.period || 1900,
         t: 0,
@@ -242,37 +253,33 @@ export default class LevelMechanics {
     }
   }
 
-  _applyNormCollider(spr, size, norm, originX, originY) {
-    if (!norm) return;
+  _applyNormCollider(spr, size, norm) {
+    if (!norm) {
+      this._setWorldBody(spr, spr.displayWidth * 0.9, spr.displayHeight * 0.9, spr.displayWidth * 0.05, spr.displayHeight * 0.05);
+      return;
+    }
     const [nx, ny, nw, nh] = norm;
     const w = spr.displayWidth;
     const h = spr.displayHeight;
-    const bw = nw * w;
-    const bh = nh * h;
-    spr.body.setSize(bw, bh);
-    // offset relative to texture top-left in unscaled space is messy with display size;
-    // Arcade uses source size — set size in display pixels after setDisplaySize via scale trick:
-    const sx = spr.scaleX;
-    const sy = spr.scaleY;
-    spr.body.setSize(bw / sx, bh / sy);
-    const ox = (nx * w) / sx;
-    const oy = (ny * h) / sy;
-    spr.body.setOffset(ox, oy);
+    this._setWorldBody(spr, nw * w, nh * h, nx * w, ny * h);
   }
 
   _lerpAnim(item, dt) {
     const anim = item.anim;
-    if (!anim) return;
+    if (!anim || !item.spr?.body) return;
     const dur = anim.duration || 2200;
     item.t += dt;
     const cycle = (item.t % (dur * 2)) / dur;
     const ping = cycle <= 1 ? cycle : 2 - cycle;
     const e = easeInOutSine(ping);
-    const v = Phaser.Math.Linear(anim.from, anim.to, e);
-    if (anim.type === 'moveX') item.spr.x = v;
-    else if (anim.type === 'moveY') item.spr.y = v;
-    if (item.spr.body) {
-      item.spr.body.reset(item.spr.x, item.spr.y);
+    const target = Phaser.Math.Linear(anim.from, anim.to, e);
+    const secs = Math.max(dt / 1000, 1 / 120);
+    if (anim.type === 'moveX') {
+      item.spr.body.setVelocityX((target - item.spr.x) / secs);
+      item.spr.body.setVelocityY(0);
+    } else if (anim.type === 'moveY') {
+      item.spr.body.setVelocityY((target - item.spr.y) / secs);
+      item.spr.body.setVelocityX(0);
     }
   }
 
@@ -282,11 +289,14 @@ export default class LevelMechanics {
       d = this.scene.physics.add.image(-100, -100, 'dart_projectile');
       d.setDisplaySize(64, 24);
       d.body.allowGravity = false;
+      this._setWorldBody(d, 52, 14, 6, 5);
+      this._markDamage(d, true);
       this.hazards.add(d);
       this.dartPool.push(d);
     }
     d.setActive(true).setVisible(true);
     d.body.enable = true;
+    this._markDamage(d, true);
     return d;
   }
 
@@ -314,7 +324,6 @@ export default class LevelMechanics {
 
       if (item.type === 'platform_disappearing') {
         item.timer += delta;
-        // visible 1400, blink 400, hidden 900
         const cycle = 1400 + 400 + 900;
         const t = item.timer % cycle;
         if (t < 1400) {
@@ -327,7 +336,7 @@ export default class LevelMechanics {
           item.spr.setAlpha(0);
           item.spr.body.enable = false;
         }
-        item.spr.body.reset(item.spr.x, item.spr.y);
+        item.spr.body.setVelocity(0, 0);
         continue;
       }
 
@@ -383,16 +392,20 @@ export default class LevelMechanics {
           item.state = 'active';
           item.timer = 0;
           item.damage = true;
+          this._markDamage(item.spr, true);
           this.scene.tweens.add({
             targets: item.spr,
             y: item.dropTo,
             duration: 450,
             ease: 'Quad.easeIn',
-            onUpdate: () => item.spr.body.reset(item.spr.x, item.spr.y),
+            onUpdate: () => {
+              if (item.spr.body) item.spr.body.reset(item.spr.x, item.spr.y);
+            },
             onComplete: () => {
               item.state = 'cooldown';
               item.timer = 0;
               item.damage = false;
+              this._markDamage(item.spr, false);
             },
           });
         } else if (item.state === 'cooldown' && item.timer > 1200) {
@@ -400,6 +413,7 @@ export default class LevelMechanics {
           item.spr.body.reset(item.spr.x, item.spr.y);
           item.state = 'idle';
           item.timer = 0;
+          this._markDamage(item.spr, false);
         }
         continue;
       }
@@ -443,16 +457,12 @@ export default class LevelMechanics {
       }
 
       if (item.type === 'spike_trap') {
-        item.timer += delta;
-        const frame = item.spr.frame.name ?? item.spr.frame.sourceIndex ?? 0;
-        const idx = typeof frame === 'number' ? frame : item.spr.anims.currentFrame?.index || 0;
+        const idx = item.spr.anims.currentFrame?.index ?? 0;
         const dangerous = idx >= 2;
         item.spr.body.enable = dangerous;
-        if (dangerous) {
-          item.spr.body.reset(item.spr.x, item.spr.y - 10);
-          item.damage = true;
-        } else {
-          item.damage = false;
+        this._markDamage(item.spr, dangerous);
+        if (dangerous && item.spr.body) {
+          item.spr.body.reset(item.spr.x, item.spr.y);
         }
         continue;
       }

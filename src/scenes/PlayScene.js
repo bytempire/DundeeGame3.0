@@ -39,8 +39,9 @@ export default class PlayScene extends Phaser.Scene {
     this.platforms = this.physics.add.staticGroup();
     for (const p of level.platforms) {
       const plat = this.platforms.create(p.x, p.y, 'solid_px');
-      // slightly taller collider than art to reduce tunneling
-      plat.setDisplaySize(p.w, Math.max(p.h, 40));
+      // Match art height; keep top aligned with hatched platform surface
+      const h = Math.max(p.h || 32, 32);
+      plat.setDisplaySize(p.w, h);
       plat.refreshBody();
       plat.setVisible(false);
     }
@@ -54,7 +55,10 @@ export default class PlayScene extends Phaser.Scene {
     this.player = new Player(this, level.spawn.x, level.spawn.y);
     this.physics.add.collider(this.player.sprite, this.platforms);
     this.physics.add.collider(this.player.sprite, this.mechanics.movers);
-    this.physics.add.overlap(this.player.sprite, this.mechanics.hazards, () => this.onHurt());
+    this.physics.add.overlap(this.player.sprite, this.mechanics.hazards, (_p, h) => {
+      if (h.getData && h.getData('damage') === false) return;
+      this.onHurt();
+    });
     this.physics.add.overlap(this.player.sprite, this.killZone, () => this.onHurt(true));
 
     const finish = this.mechanics.getFinishZone();

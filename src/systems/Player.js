@@ -30,6 +30,8 @@ export default class Player {
     this.lying = false;
     this.coyote = 0;
     this.jumpBuf = 0;
+    this.jumpHold = 0;
+    this.wasUp = false;
     this.invuln = 0;
     this.dead = false;
     this.input = { left: false, right: false, up: false, down: false, upJust: false };
@@ -155,12 +157,17 @@ export default class Player {
       body.setVelocityY(JUMP_V);
       this.jumpBuf = 0;
       this.coyote = 0;
+      this.jumpHold = 0;
       this.sprite.anims.play('hero_jump', true);
     }
 
-    if (!this.input.up && body.velocity.y < -200) {
-      body.setVelocityY(body.velocity.y * 0.55);
+    if (!onFloor && body.velocity.y < 0) this.jumpHold += delta;
+
+    // Variable jump: cut only on release after a short hold (tap = full hop)
+    if (this.wasUp && !this.input.up && body.velocity.y < -200 && this.jumpHold > 100) {
+      body.setVelocityY(body.velocity.y * 0.5);
     }
+    this.wasUp = this.input.up;
 
     if (!onFloor) {
       if (this.sprite.anims.currentAnim?.key !== 'hero_jump' || this.sprite.anims.isPlaying === false) {
