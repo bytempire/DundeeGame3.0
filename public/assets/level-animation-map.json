@@ -1,0 +1,81 @@
+{
+  "01": [],
+  "02": [
+    "spikes_3",
+    "spikes_5"
+  ],
+  "03": [
+    "platform_moving:horizontal"
+  ],
+  "04": [
+    "platform_breakable:fall_after_touch",
+    "spikes_5"
+  ],
+  "05": [
+    "falling_block:vertical_drop",
+    "chain_tile",
+    "spikes_3"
+  ],
+  "06": [
+    "rising_wall:vertical",
+    "spikes_3"
+  ],
+  "07": [
+    "dart_launcher_left",
+    "dart_projectile:horizontal"
+  ],
+  "08": [
+    "platform_disappearing:cycle",
+    "spikes_3"
+  ],
+  "09": [
+    "saw_blade:horizontal_and_rotate"
+  ],
+  "10": [
+    "dart_launcher_right",
+    "dart_projectile:horizontal",
+    "spikes_3"
+  ],
+  "11": [
+    "platform_moving:vertical_elevator",
+    "ceiling_spike_panel:drop"
+  ],
+  "12": [
+    "platform_breakable:bridge_collapse",
+    "spikes_5"
+  ],
+  "13": [
+    "pendulum_spiked_ball:swing"
+  ],
+  "14": [
+    "vertical_gate:vertical",
+    "spikes_3"
+  ],
+  "15": [
+    "crusher_spiked:drop",
+    "platform_moving:horizontal",
+    "spikes_5"
+  ],
+  "16": [
+    "spike_trap:extend_retract",
+    "platform_moving:vertical"
+  ],
+  "17": [
+    "falling_block:vertical_drop",
+    "impact_fx"
+  ],
+  "18": [
+    "platform_disappearing:cycle",
+    "ceiling_spike_panel:drop"
+  ],
+  "19": [
+    "pendulum_spiked_ball:swing",
+    "ceiling_spike_panel:drop"
+  ],
+  "20": [
+    "pendulum_blade:swing",
+    "falling_block:vertical_drop",
+    "platform_moving:horizontal",
+    "spike_trap:extend_retract"
+  ]
+}
