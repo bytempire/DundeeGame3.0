@@ -3,6 +3,7 @@ import BootScene from './scenes/BootScene.js';
 import MenuScene from './scenes/MenuScene.js';
 import LevelSelectScene from './scenes/LevelSelectScene.js';
 import PlayScene from './scenes/PlayScene.js';
+import { RISE_GRAVITY } from './systems/Player.js';
 
 const WORLD_W = 1672;
 const WORLD_H = 941;
@@ -33,7 +34,7 @@ const config = {
   physics: {
     default: 'arcade',
     arcade: {
-      gravity: { x: 0, y: 2200 },
+      gravity: { x: 0, y: RISE_GRAVITY },
       debug: debugPhysics,
     },
   },
@@ -46,7 +47,6 @@ const config = {
 const game = new Phaser.Game(config);
 window.__DUNDEE__ = game;
 
-// Lazy playtest helper for QA
 window.__runPlaytest = async (levels) => {
   const { runPlaytest } = await import('./debug/playtest.js');
   return runPlaytest(game, { levels });

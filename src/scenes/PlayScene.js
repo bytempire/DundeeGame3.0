@@ -1,7 +1,9 @@
 import Phaser from 'phaser';
-import Player from '../systems/Player.js';
+import Player, { RISE_GRAVITY } from '../systems/Player.js';
 import VirtualPad from '../systems/VirtualPad.js';
 import LevelMechanics from '../systems/LevelMechanics.js';
+import FollowCamera from '../systems/FollowCamera.js';
+import Hud from '../systems/Hud.js';
 import { getLevel } from '../data/levels.js';
 import { unlockLevel, saveBestTime, formatTime } from '../data/storage.js';
 import { WORLD } from '../data/manifest.js';
@@ -17,6 +19,7 @@ export default class PlayScene extends Phaser.Scene {
     this.elapsed = 0;
     this.finished = false;
     this.hurtLock = false;
+    this.pauseOverlay = null;
   }
 
   create() {
@@ -26,8 +29,9 @@ export default class PlayScene extends Phaser.Scene {
     this.add.image(WORLD.w / 2, WORLD.h / 2, `level_${id}`).setDisplaySize(WORLD.w, WORLD.h);
 
     this.physics.world.setBounds(0, 0, WORLD.w, WORLD.h + 200);
+    // Rise gravity from platformer skill derivation (Player adds fall multiplier)
+    this.physics.world.gravity.y = RISE_GRAVITY;
 
-    // 1×1 texture for solid platforms (rectangle+staticGroup is unreliable in Arcade)
     if (!this.textures.exists('solid_px')) {
       const g = this.make.graphics({ x: 0, y: 0, add: false });
       g.fillStyle(0xffffff, 1);
@@ -39,18 +43,16 @@ export default class PlayScene extends Phaser.Scene {
     this.platforms = this.physics.add.staticGroup();
     for (const p of level.platforms) {
       const plat = this.platforms.create(p.x, p.y, 'solid_px');
-      // Match art height; keep top aligned with hatched platform surface
       const h = Math.max(p.h || 32, 32);
       plat.setDisplaySize(p.w, h);
       plat.refreshBody();
       plat.setVisible(false);
     }
 
-    // kill zone at bottom
     this.killZone = this.add.rectangle(WORLD.w / 2, WORLD.h + 80, WORLD.w, 100, 0, 0);
     this.physics.add.existing(this.killZone, true);
 
-    this.mechanics = new LevelMechanics(this, level.objects, { debugColliders: false });
+    this.mechanics = new LevelMechanics(this, level.objects);
 
     this.player = new Player(this, level.spawn.x, level.spawn.y);
     this.physics.add.collider(this.player.sprite, this.platforms);
@@ -67,71 +69,22 @@ export default class PlayScene extends Phaser.Scene {
     }
 
     this.pad = new VirtualPad(this);
-    this._buildHud();
+    this.followCam = new FollowCamera(this, this.player.sprite, { width: WORLD.w, height: WORLD.h });
 
-    this.cameras.main.setBounds(0, 0, WORLD.w, WORLD.h);
-  }
+    this.hud = new Hud(this, {
+      level: this.levelNum,
+      lives: this.lives,
+      worldW: WORLD.w,
+      worldH: WORLD.h,
+    });
+    this.hud.onPause(() => this.showPause());
 
-  _buildHud() {
-    this.hud = this.add.container(0, 0).setScrollFactor(0).setDepth(900);
-    this.livesText = this.add
-      .text(24, 18, this._livesLabel(), {
-        fontFamily: 'Georgia, serif',
-        fontSize: '28px',
-        color: '#262626',
-        backgroundColor: '#f3ead5aa',
-        padding: { x: 10, y: 6 },
-      })
-      .setScrollFactor(0)
-      .setDepth(900);
-    this.timeText = this.add
-      .text(WORLD.w / 2, 18, '00:00.00', {
-        fontFamily: 'monospace',
-        fontSize: '28px',
-        color: '#262626',
-        backgroundColor: '#f3ead5aa',
-        padding: { x: 10, y: 6 },
-      })
-      .setOrigin(0.5, 0)
-      .setScrollFactor(0)
-      .setDepth(900);
-    this.levelText = this.add
-      .text(WORLD.w - 24, 18, `Ур. ${this.levelNum}`, {
-        fontFamily: 'Georgia, serif',
-        fontSize: '28px',
-        color: '#262626',
-        backgroundColor: '#f3ead5aa',
-        padding: { x: 10, y: 6 },
-      })
-      .setOrigin(1, 0)
-      .setScrollFactor(0)
-      .setDepth(900);
-
-    const pause = this.add
-      .rectangle(WORLD.w - 24, 70, 44, 44, 0xf3ead5, 0.9)
-      .setStrokeStyle(2, 0x262626)
-      .setOrigin(1, 0)
-      .setScrollFactor(0)
-      .setDepth(900)
-      .setInteractive({ useHandCursor: true });
-    this.add
-      .text(WORLD.w - 46, 92, '||', {
-        fontFamily: 'Georgia, serif',
-        fontSize: '20px',
-        color: '#262626',
-      })
-      .setOrigin(0.5)
-      .setScrollFactor(0)
-      .setDepth(901);
-    pause.on('pointerdown', () => this.showPause());
-  }
-
-  _livesLabel() {
-    return `♥ ${this.lives}`;
+    this.events.on('player-land', () => this.followCam.addTrauma(0.12));
+    this.events.on('player-jump', () => {});
   }
 
   showPause() {
-    if (this.pauseOverlay) return;
+    if (this.pauseOverlay || this.finished) return;
     this.physics.pause();
     const { width, height } = this.scale;
     this.pauseOverlay = this.add.container(0, 0).setDepth(2000).setScrollFactor(0);
@@ -166,11 +119,13 @@ export default class PlayScene extends Phaser.Scene {
     mk(height / 2 + 120, 'Заново', () => this.scene.restart({ level: this.levelNum }));
   }
 
-  onHurt(fall = false) {
+  onHurt() {
     if (this.finished || this.hurtLock || this.player.invuln > 0) return;
     this.hurtLock = true;
     this.lives -= 1;
-    this.livesText.setText(this._livesLabel());
+    this.events.emit('hud-lives', this.lives);
+    this.followCam.addTrauma(0.45);
+    this.cameras.main.flash(120, 201, 91, 80, false);
 
     if (this.lives <= 0) {
       this.gameOver();
@@ -180,7 +135,7 @@ export default class PlayScene extends Phaser.Scene {
     this.player.hurtFlash();
     const level = getLevel(this.levelNum);
     this.player.respawn(level.spawn.x, level.spawn.y);
-    this.time.delayedCall(200, () => {
+    this.time.delayedCall(250, () => {
       this.hurtLock = false;
     });
   }
@@ -289,13 +244,14 @@ export default class PlayScene extends Phaser.Scene {
   update(_t, delta) {
     if (this.finished || this.pauseOverlay) return;
     this.elapsed += delta;
-    this.timeText.setText(formatTime(this.elapsed));
+    this.events.emit('hud-time', formatTime(this.elapsed));
 
     const input = this.pad.update();
     this.player.setInput(input);
     this.player.update(delta);
     this.mechanics.update(delta, this.player.sprite);
+    this.followCam.update(delta);
 
-    if (this.player.y > WORLD.h + 40) this.onHurt(true);
+    if (this.player.y > WORLD.h + 40) this.onHurt();
   }
 }
