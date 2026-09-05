@@ -39,9 +39,11 @@ export default class LevelMechanics {
     const size = meta.size || meta.frameSize || [64, 64];
 
     if (type === 'finish_door') {
+      // Door is already drawn on the level background — keep an invisible trigger only.
       const spr = this.scene.add.image(cfg.x, cfg.y, 'finish_door_closed').setOrigin(0.5, 1);
       spr.setDisplaySize(size[0], size[1]);
-      const zone = this.scene.add.zone(cfg.x, cfg.y - 40, 60, 80);
+      spr.setAlpha(0);
+      const zone = this.scene.add.zone(cfg.x, cfg.y - 40, 70, 90);
       this.scene.physics.add.existing(zone, true);
       this.items.push({ type, cfg, spr, zone, state: 'idle' });
       return;

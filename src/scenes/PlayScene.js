@@ -101,9 +101,9 @@ export default class PlayScene extends Phaser.Scene {
       .setDepth(900)
       .setInteractive({ useHandCursor: true });
     this.add
-      .text(WORLD.w - 46, 92, '❚❚', {
+      .text(WORLD.w - 46, 92, '||', {
         fontFamily: 'Georgia, serif',
-        fontSize: '18px',
+        fontSize: '20px',
         color: '#262626',
       })
       .setOrigin(0.5)
