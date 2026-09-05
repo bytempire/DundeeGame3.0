@@ -27,12 +27,22 @@ export default class PlayScene extends Phaser.Scene {
 
     this.physics.world.setBounds(0, 0, WORLD.w, WORLD.h + 200);
 
-    // invisible platform colliders from level data
+    // 1×1 texture for solid platforms (rectangle+staticGroup is unreliable in Arcade)
+    if (!this.textures.exists('solid_px')) {
+      const g = this.make.graphics({ x: 0, y: 0, add: false });
+      g.fillStyle(0xffffff, 1);
+      g.fillRect(0, 0, 4, 4);
+      g.generateTexture('solid_px', 4, 4);
+      g.destroy();
+    }
+
     this.platforms = this.physics.add.staticGroup();
     for (const p of level.platforms) {
-      const plat = this.add.rectangle(p.x, p.y, p.w, p.h, 0xff0000, 0);
-      this.physics.add.existing(plat, true);
-      this.platforms.add(plat);
+      const plat = this.platforms.create(p.x, p.y, 'solid_px');
+      // slightly taller collider than art to reduce tunneling
+      plat.setDisplaySize(p.w, Math.max(p.h, 40));
+      plat.refreshBody();
+      plat.setVisible(false);
     }
 
     // kill zone at bottom
@@ -165,8 +175,7 @@ export default class PlayScene extends Phaser.Scene {
 
     this.player.hurtFlash();
     const level = getLevel(this.levelNum);
-    this.player.sprite.setVelocity(0, 0);
-    this.player.sprite.setPosition(level.spawn.x, level.spawn.y);
+    this.player.respawn(level.spawn.x, level.spawn.y);
     this.time.delayedCall(200, () => {
       this.hurtLock = false;
     });

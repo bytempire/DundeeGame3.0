@@ -1,6 +1,10 @@
 import Phaser from 'phaser';
 
-const DISPLAY = 0.32; // 320 * 0.32 ≈ 102px
+const DISPLAY = 0.28;
+const BODY_W = 40;
+const BODY_H = 64;
+const LIE_W = 64;
+const LIE_H = 32;
 const RUN_SPEED = 360;
 const JUMP_V = -920;
 const COYOTE = 100;
@@ -9,17 +13,18 @@ const JUMP_BUFFER = 120;
 export default class Player {
   /**
    * @param {Phaser.Scene} scene
-   * @param {number} x
-   * @param {number} y
+   * @param {number} x center x
+   * @param {number} feetY platform top (where feet should rest)
    */
-  constructor(scene, x, y) {
+  constructor(scene, x, feetY) {
     this.scene = scene;
-    this.sprite = scene.physics.add.sprite(x, y, 'hero', 0);
+    this.sprite = scene.physics.add.sprite(x, feetY, 'hero', 0);
     this.sprite.setScale(DISPLAY);
     this.sprite.setCollideWorldBounds(false);
     this.sprite.body.setMaxVelocity(520, 1600);
     this.sprite.body.setDragX(1800);
-    this._setStandingBody();
+    this.sprite.body.setBounce(0);
+    this.sprite.body.setFriction(1, 0);
 
     this.facing = 1;
     this.lying = false;
@@ -29,21 +34,54 @@ export default class Player {
     this.dead = false;
     this.input = { left: false, right: false, up: false, down: false, upJust: false };
 
+    this._setStandingBody();
+    this._placeFeetAt(x, feetY);
     this.sprite.anims.play('hero_idle');
   }
 
   _setStandingBody() {
-    const w = 48;
-    const h = 72;
-    this.sprite.body.setSize(w / DISPLAY, h / DISPLAY);
-    this.sprite.body.setOffset((320 - w / DISPLAY) / 2, 320 - h / DISPLAY - 8);
+    const bw = BODY_W / DISPLAY;
+    const bh = BODY_H / DISPLAY;
+    // keep body bottom flush with sprite bottom (feet)
+    this.sprite.body.setSize(bw, bh, false);
+    this.sprite.body.setOffset((320 - bw) / 2, 320 - bh);
   }
 
   _setLyingBody() {
-    const w = 72;
-    const h = 36;
-    this.sprite.body.setSize(w / DISPLAY, h / DISPLAY);
-    this.sprite.body.setOffset((320 - w / DISPLAY) / 2, 320 - h / DISPLAY - 4);
+    const bw = LIE_W / DISPLAY;
+    const bh = LIE_H / DISPLAY;
+    this.sprite.body.setSize(bw, bh, false);
+    this.sprite.body.setOffset((320 - bw) / 2, 320 - bh);
+  }
+
+  /**
+   * Place sprite so after Arcade syncs body from offset, feet sit on feetY.
+   * Do NOT call body.reset(x,y) with sprite-center coords — it desyncs offset for 1 frame
+   * and tunnels through thin platforms.
+   */
+  _placeFeetAt(x, feetY) {
+    const targetBottom = feetY - 2;
+    // first guess: feet ≈ sprite bottom
+    this.sprite.setPosition(x, targetBottom - this.sprite.displayHeight / 2);
+    this.sprite.body.velocity.set(0, 0);
+    this.sprite.body.setAcceleration(0, 0);
+    // sync AABB from game object + offset
+    if (typeof this.sprite.body.updateFromGameObject === 'function') {
+      this.sprite.body.updateFromGameObject();
+    } else {
+      // fallback: manually match body top-left
+      this.sprite.body.x = this.sprite.x - this.sprite.displayOriginX + this.sprite.body.offset.x * this.sprite.scaleX;
+      this.sprite.body.y = this.sprite.y - this.sprite.displayOriginY + this.sprite.body.offset.y * this.sprite.scaleY;
+    }
+    const dy = targetBottom - this.sprite.body.bottom;
+    this.sprite.y += dy;
+    if (typeof this.sprite.body.updateFromGameObject === 'function') {
+      this.sprite.body.updateFromGameObject();
+    } else {
+      this.sprite.body.x = this.sprite.x - this.sprite.displayOriginX + this.sprite.body.offset.x * this.sprite.scaleX;
+      this.sprite.body.y = this.sprite.y - this.sprite.displayOriginY + this.sprite.body.offset.y * this.sprite.scaleY;
+    }
+    this.sprite.body.velocity.set(0, 0);
   }
 
   setInput(state) {
@@ -66,6 +104,13 @@ export default class Player {
     });
   }
 
+  respawn(x, feetY) {
+    this.lying = false;
+    this._setStandingBody();
+    this._placeFeetAt(x, feetY);
+    this.sprite.setAlpha(1);
+  }
+
   update(delta) {
     if (this.dead) return;
     const body = this.sprite.body;
@@ -80,7 +125,6 @@ export default class Player {
     else this.jumpBuf -= delta;
     this.input.upJust = false;
 
-    // lie only on ground
     if (this.input.down && onFloor) {
       if (!this.lying) {
         this.lying = true;
@@ -114,16 +158,17 @@ export default class Player {
       this.sprite.anims.play('hero_jump', true);
     }
 
-    // variable jump cut
     if (!this.input.up && body.velocity.y < -200) {
       body.setVelocityY(body.velocity.y * 0.55);
     }
 
-    // fall gravity boost via world gravity; animate
     if (!onFloor) {
       if (this.sprite.anims.currentAnim?.key !== 'hero_jump' || this.sprite.anims.isPlaying === false) {
         this.sprite.anims.play('hero_jump', true);
-        this.sprite.anims.setCurrentFrame(this.sprite.anims.currentAnim.frames[body.velocity.y < 0 ? 2 : 3]);
+        const frames = this.sprite.anims.currentAnim?.frames;
+        if (frames?.length) {
+          this.sprite.anims.setCurrentFrame(frames[body.velocity.y < 0 ? 2 : Math.min(3, frames.length - 1)]);
+        }
       }
     } else if (!this.lying) {
       if (Math.abs(body.velocity.x) > 40) this.sprite.anims.play('hero_run', true);

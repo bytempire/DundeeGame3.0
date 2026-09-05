@@ -18,6 +18,8 @@ if (window.Telegram?.WebApp) {
   }
 }
 
+const debugPhysics = new URLSearchParams(location.search).has('debug');
+
 const config = {
   type: Phaser.AUTO,
   parent: 'game-container',
@@ -32,7 +34,7 @@ const config = {
     default: 'arcade',
     arcade: {
       gravity: { x: 0, y: 2200 },
-      debug: false,
+      debug: debugPhysics,
     },
   },
   input: {
@@ -41,6 +43,7 @@ const config = {
   scene: [BootScene, MenuScene, LevelSelectScene, PlayScene],
 };
 
-new Phaser.Game(config);
+const game = new Phaser.Game(config);
+window.__DUNDEE__ = game;
 
 export { WORLD_W, WORLD_H };

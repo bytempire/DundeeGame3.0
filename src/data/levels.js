@@ -12,7 +12,7 @@ function plat(x, y, width, height = 32) {
 const L = {};
 
 L[1] = {
-  spawn: { x: 280, y: 595 },
+  spawn: { x: 360, y: 595 },
   platforms: [
     plat(455, 611, 437),
     plat(868, 559, 349),
