@@ -489,8 +489,8 @@ export class PlayScene extends Phaser.Scene {
 
     // Pendulum: hangs so standing hits the ball, ducking slides under.
     const scale = 0.95;
-    const arm = 168 * scale;
-    const r = 38 * scale;
+    const arm = 165 * scale; // pivot → ball center in texture
+    const r = 28 * scale; // inside the spikes a bit (was oversized)
     // Ball bottom ≈ groundY - 22 when hanging straight
     const pivotY = this.groundY - arm - r - 22;
     const go = this.add
@@ -513,9 +513,10 @@ export class PlayScene extends Phaser.Scene {
   }
 
   private pendulumBall(o: Obstacle) {
+    // Phaser angle is clockwise; local "down" (0, arm) → (-sin, cos)
     const rad = Phaser.Math.DegToRad(o.go.angle);
     return {
-      x: o.go.x + Math.sin(rad) * o.arm,
+      x: o.go.x - Math.sin(rad) * o.arm,
       y: o.go.y + Math.cos(rad) * o.arm,
     };
   }
