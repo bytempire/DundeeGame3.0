@@ -1,0 +1,129 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RunStatus {
+  ACTIVE
+  FINISHED
+  ABANDONED
+}
+
+enum LedgerKind {
+  RUN_REWARD
+  REDEEM
+  ADJUST
+}
+
+enum RedeemStatus {
+  PENDING
+  DONE
+  FAILED
+}
+
+enum StarPaymentKind {
+  REVIVE
+}
+
+enum StarPaymentStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+model User {
+  id         String   @id @default(cuid())
+  telegramId BigInt   @unique
+  username   String?
+  firstName  String?
+  lastName   String?
+  coinBalance Int     @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  runs       Run[]
+  ledger     WalletLedger[]
+  redeems    RedeemOrder[]
+  starPayments StarPayment[]
+}
+
+model Run {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  seed         String
+  status       RunStatus @default(ACTIVE)
+  distance     Int       @default(0)
+  pickupCoins  Int       @default(0)
+  rewardCoins  Int       @default(0)
+  reviveCount  Int       @default(0)
+  /** Purchased continue credits remaining (after free revives are spent) */
+  extraRevives Int       @default(0)
+  startedAt    DateTime  @default(now())
+  finishedAt   DateTime?
+  durationMs   Int?
+  clientMaxSpeed Float?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  starPayments StarPayment[]
+
+  @@index([userId, status])
+  @@index([userId, startedAt])
+}
+
+model WalletLedger {
+  id        String     @id @default(cuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind      LedgerKind
+  amount    Int
+  balanceAfter Int
+  refType   String?
+  refId     String?
+  note      String?
+  createdAt DateTime   @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model RedeemOrder {
+  id               String       @id @default(cuid())
+  userId           String
+  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  days             Int
+  coinsSpent       Int
+  status           RedeemStatus @default(PENDING)
+  idempotencyKey   String       @unique
+  vpnExpiresAt     DateTime?
+  errorMessage     String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  @@index([userId, createdAt])
+}
+
+model StarPayment {
+  id                      String            @id @default(cuid())
+  userId                  String
+  user                    User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  runId                   String?
+  run                     Run?              @relation(fields: [runId], references: [id], onDelete: SetNull)
+  kind                    StarPaymentKind
+  status                  StarPaymentStatus @default(PENDING)
+  amountStars             Int
+  reviveIndex             Int?
+  /** How many continue credits this payment grants (1..5) */
+  packSize                Int?
+  payload                 String            @unique
+  telegramPaymentChargeId String?           @unique
+  invoiceLink             String?
+  createdAt               DateTime          @default(now())
+  updatedAt               DateTime          @updatedAt
+  paidAt                  DateTime?
+
+  @@index([userId, status])
+  @@index([runId])
+}

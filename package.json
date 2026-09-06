@@ -1,18 +1,16 @@
 {
-  "name": "dundeegame3-0",
-  "version": "1.0.0",
+  "name": "dundee-runner",
   "private": true,
-  "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "bot": "node bot/poll.mjs"
+    "dev:api": "pnpm --filter @dundee/api dev",
+    "dev:bot": "pnpm --filter @dundee/bot dev",
+    "dev:web": "pnpm --filter @dundee/web dev",
+    "build": "pnpm --filter @dundee/db build && pnpm --filter @dundee/api build && pnpm --filter @dundee/bot build && pnpm --filter @dundee/web build",
+    "db:generate": "pnpm --filter @dundee/db generate",
+    "db:push": "pnpm --filter @dundee/db push"
   },
-  "devDependencies": {
-    "vite": "^8.2.2"
+  "engines": {
+    "node": ">=20"
   },
-  "dependencies": {
-    "phaser": "^4.2.1"
-  }
+  "packageManager": "pnpm@9.15.0"
 }

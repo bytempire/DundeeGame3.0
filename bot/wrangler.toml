@@ -1,6 +1,0 @@
-name = "dundee-game-bot"
-main = "worker.js"
-compatibility_date = "2024-09-01"
-
-[vars]
-GAME_URL = "https://bytempire.github.io/DundeeGame3.0/"

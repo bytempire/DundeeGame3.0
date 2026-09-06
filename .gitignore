@@ -1,11 +1,8 @@
 node_modules
 dist
-.DS_Store
-*.local
 .env
-.env.*
-.vscode
-.idea
-bot/.wrangler
-/tmp/
 *.log
+.DS_Store
+apps/web/dist
+packages/db/dist
+.vite
