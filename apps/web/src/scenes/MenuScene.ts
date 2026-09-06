@@ -6,7 +6,6 @@ import {
   NOTEBOOK_MUTED,
 } from "../ui/notebookBg";
 import { addPenTextButton } from "../ui/penControls";
-import { fetchLeaderboard, type LeaderboardEntry } from "../leaderboard";
 
 type MeResponse = {
   coinBalance: number;
@@ -23,7 +22,6 @@ type MeResponse = {
 export class MenuScene extends Phaser.Scene {
   private me: MeResponse | null = null;
   private statusText!: Phaser.GameObjects.Text;
-  private boardOverlay?: Phaser.GameObjects.Container;
 
   constructor() {
     super("menu");
@@ -62,7 +60,7 @@ export class MenuScene extends Phaser.Scene {
     });
 
     addPenTextButton(this, width / 2, height * 0.66, "Рекорды", () => {
-      void this.showLeaderboard();
+      this.scene.start("leaderboard");
     });
 
     addPenTextButton(this, width / 2, height * 0.76, "Магазин VPN", () => {
@@ -75,79 +73,6 @@ export class MenuScene extends Phaser.Scene {
     });
 
     void this.refreshMe();
-  }
-
-  private async showLeaderboard() {
-    const { width, height } = this.scale;
-    this.boardOverlay?.destroy(true);
-
-    this.boardOverlay = this.add.container(0, 0).setDepth(40);
-    const bg = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.4);
-    this.boardOverlay.add(bg);
-
-    const title = this.add
-      .text(width / 2, height * 0.12, "Топ-10 · дистанция", {
-        fontFamily: "Georgia, 'Times New Roman', serif",
-        fontSize: "26px",
-        color: "#f4f1e8",
-        fontStyle: "italic",
-      })
-      .setOrigin(0.5);
-    this.boardOverlay.add(title);
-
-    const loading = this.add
-      .text(width / 2, height * 0.45, "Загрузка…", {
-        fontFamily: "Georgia, 'Times New Roman', serif",
-        fontSize: "16px",
-        color: "#e8e2d4",
-        fontStyle: "italic",
-      })
-      .setOrigin(0.5);
-    this.boardOverlay.add(loading);
-
-    const close = addPenTextButton(this, width / 2, height * 0.9, "Назад", () => {
-      this.boardOverlay?.destroy(true);
-      this.boardOverlay = undefined;
-    }, { paperFill: true, depth: 41 });
-    this.boardOverlay.add(close.root);
-
-    let entries: LeaderboardEntry[] = [];
-    try {
-      entries = await fetchLeaderboard();
-    } catch {
-      entries = [];
-    }
-
-    loading.destroy();
-
-    if (!entries.length) {
-      const empty = this.add
-        .text(width / 2, height * 0.45, "Пока пусто — пробеги первый забег!", {
-          fontFamily: "Georgia, 'Times New Roman', serif",
-          fontSize: "16px",
-          color: "#e8e2d4",
-          fontStyle: "italic",
-          align: "center",
-        })
-        .setOrigin(0.5);
-      this.boardOverlay.add(empty);
-      return;
-    }
-
-    const lines = entries
-      .map((e) => `${e.rank}. ${e.name} — ${e.distance} м`)
-      .join("\n");
-    const list = this.add
-      .text(width / 2, height * 0.22, lines, {
-        fontFamily: "Georgia, 'Times New Roman', serif",
-        fontSize: "18px",
-        color: "#f4f1e8",
-        fontStyle: "italic",
-        align: "left",
-        lineSpacing: 8,
-      })
-      .setOrigin(0.5, 0);
-    this.boardOverlay.add(list);
   }
 
   private async refreshMe() {
