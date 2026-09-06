@@ -14,8 +14,8 @@ const finishSchema = z.object({
   clientMaxSpeed: z.number().min(0).max(500).optional(),
 });
 
-function computeReward(distance: number, pickupCoins: number): number {
-  return Math.floor(distance / ECONOMY.coinsPerDistanceUnit) + pickupCoins;
+function computeReward(_distance: number, pickupCoins: number): number {
+  return pickupCoins;
 }
 
 export const runRoutes: FastifyPluginAsync = async (app) => {

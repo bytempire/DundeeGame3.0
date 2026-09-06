@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { api, getInitData, getWebApp, isApiEnabled } from "../api";
 import { addNotebookBackground, NOTEBOOK_INK } from "../ui/notebookBg";
 import { addPenButton, addPenTextButton } from "../ui/penControls";
+import { recordLocalScore } from "../leaderboard";
 
 type StartResponse = {
   runId: string;
@@ -406,7 +407,7 @@ export class PlayScene extends Phaser.Scene {
     if (this.player.y > this.scale.height + 80) this.onHit();
 
     this.hud.setText(
-      `Дистанция: ${Math.floor(this.distance)}\nКлючи: ${this.pickupCoins} (+${Math.floor(this.distance / 10)})\nПопытки: ${this.freeLeft()} бесплатно` +
+      `Дистанция: ${Math.floor(this.distance)}\nКлючи: ${this.pickupCoins}\nПопытки: ${this.freeLeft()} бесплатно` +
         (this.extraRevives > 0 ? ` + ${this.extraRevives}` : ""),
     );
   }
@@ -487,12 +488,12 @@ export class PlayScene extends Phaser.Scene {
       return;
     }
 
-    // Pendulum: hangs so standing hits the ball, ducking slides under.
+    // Pendulum: must duck (lie) to pass; standing torso gets hit.
     const scale = 0.95;
-    const arm = 165 * scale; // pivot → ball center in texture
-    const r = 28 * scale; // inside the spikes a bit (was oversized)
-    // Ball bottom ≈ groundY - 22 when hanging straight
-    const pivotY = this.groundY - arm - r - 22;
+    const arm = 170 * scale; // pivot → ball center
+    const r = 30 * scale;
+    // Ball hangs low over the path
+    const pivotY = this.groundY - arm - r - 10;
     const go = this.add
       .image(x, pivotY, "pendulum")
       .setOrigin(0.5, 0)
@@ -556,9 +557,23 @@ export class PlayScene extends Phaser.Scene {
     );
   }
 
+  /** Standing: full height for overhead traps; ducking: feet hitbox only. */
+  private playerHazardBounds() {
+    if (this.ducking) return this.playerBounds();
+    const h = 320 * PLAYER_SCALE * 0.88;
+    const w = 320 * PLAYER_SCALE * 0.38;
+    return new Phaser.Geom.Rectangle(
+      this.player.x - w / 2,
+      this.player.y - h,
+      w,
+      h,
+    );
+  }
+
   private checkCollisions() {
     const pb = this.playerBounds();
     const collect = this.playerCollectBounds();
+    const hazard = this.playerHazardBounds();
 
     for (const o of this.obstacles) {
       let hit = false;
@@ -578,8 +593,13 @@ export class PlayScene extends Phaser.Scene {
       } else {
         const ball = this.pendulumBall(o);
         hit =
-          Phaser.Math.Distance.Between(ball.x, ball.y, pb.centerX, pb.centerY) <
-          o.r + Math.min(pb.width, pb.height) * 0.32;
+          Phaser.Math.Distance.Between(
+            ball.x,
+            ball.y,
+            hazard.centerX,
+            hazard.centerY,
+          ) <
+          o.r + Math.min(hazard.width, hazard.height) * 0.28;
       }
       if (hit) {
         this.onHit();
@@ -644,7 +664,7 @@ export class PlayScene extends Phaser.Scene {
       .text(
         width / 2,
         height * 0.34,
-        `Дистанция ${Math.floor(this.distance)}\nКлючи забега ~ ${Math.floor(this.distance / 10) + this.pickupCoins}`,
+        `Дистанция ${Math.floor(this.distance)}\nКлючи забега: ${this.pickupCoins}`,
         {
           fontFamily: "Georgia, 'Times New Roman', serif",
           fontSize: "16px",
@@ -659,10 +679,13 @@ export class PlayScene extends Phaser.Scene {
     this.addOverlayButton(width / 2, height * 0.5, "Продолжить", () => {
       void this.doContinue();
     });
-    this.addOverlayButton(width / 2, height * 0.62, "Забрать ключи", () => {
+    this.addOverlayButton(width / 2, height * 0.6, "Забрать ключи", () => {
       void this.finishAndMenu();
     });
-    this.addOverlayButton(width / 2, height * 0.74, "VPN-бот", () => {
+    this.addOverlayButton(width / 2, height * 0.7, "В меню", () => {
+      void this.finishAndMenu();
+    });
+    this.addOverlayButton(width / 2, height * 0.8, "VPN-бот", () => {
       const url = `https://t.me/${this.vpnBotUsername}`;
       getWebApp()?.openTelegramLink?.(url) ?? window.open(url, "_blank");
     });
@@ -703,6 +726,9 @@ export class PlayScene extends Phaser.Scene {
     }
 
     this.addOverlayButton(width / 2, y + height * 0.02, "Забрать ключи", () => {
+      void this.finishAndMenu();
+    });
+    this.addOverlayButton(width / 2, y + height * 0.12, "В меню", () => {
       void this.finishAndMenu();
     });
   }
@@ -820,13 +846,15 @@ export class PlayScene extends Phaser.Scene {
 
   private async finishAndMenu() {
     const durationMs = Math.floor(performance.now() - this.startedAt);
+    const dist = Math.floor(this.distance);
+    recordLocalScore(dist);
     if (this.runId && this.runId !== "local-dev") {
       try {
         const res = await api<FinishResponse>("/runs/finish", {
           method: "POST",
           json: {
             runId: this.runId,
-            distance: Math.floor(this.distance),
+            distance: dist,
             pickupCoins: this.pickupCoins,
             durationMs,
             clientMaxSpeed: this.maxSpeedSeen,

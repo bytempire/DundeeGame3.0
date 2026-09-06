@@ -21,7 +21,8 @@ const schema = z.object({
 export const env = schema.parse(process.env);
 
 export const ECONOMY = {
-  coinsPerDistanceUnit: 10, // floor(distance / 10)
+  /** Keys come only from pickups (no distance bonus) */
+  coinsPerDistanceUnit: 0,
   redeemOneDayCoins: 800,
   redeemThreeDayCoins: 2000,
   maxVpnDaysPerDay: 2,

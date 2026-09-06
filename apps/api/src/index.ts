@@ -5,6 +5,7 @@ import { runRoutes } from "./routes/runs.js";
 import { meRoutes } from "./routes/me.js";
 import { starsRoutes } from "./routes/stars.js";
 import { internalUserRoutes } from "./routes/internal-users.js";
+import { leaderboardRoutes } from "./routes/leaderboard.js";
 
 const app = Fastify({ logger: true });
 
@@ -16,6 +17,7 @@ await app.register(runRoutes);
 await app.register(meRoutes);
 await app.register(starsRoutes);
 await app.register(internalUserRoutes);
+await app.register(leaderboardRoutes);
 
 try {
   await app.listen({ host: env.API_HOST, port: env.API_PORT });
