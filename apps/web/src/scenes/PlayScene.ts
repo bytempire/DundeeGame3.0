@@ -230,7 +230,7 @@ export class PlayScene extends Phaser.Scene {
     });
     down.hit.on("pointerup", () => this.setDuck(false));
     down.hit.on("pointerupoutside", () => this.setDuck(false));
-    down.hit.on("pointerout", () => this.setDuck(false));
+    // Don't clear duck on pointerout — finger drift would stand up under the pendulum
 
     this.input.keyboard?.on("keydown-UP", () => {
       if (this.dead) return;
@@ -518,10 +518,10 @@ export class PlayScene extends Phaser.Scene {
 
     // Pendulum: must duck (lie) to pass; standing torso gets hit.
     const scale = 0.95;
-    const arm = 170 * scale; // pivot → ball center
-    const r = 30 * scale;
-    // Ball hangs low over the path
-    const pivotY = this.groundY - arm - r - 10;
+    const arm = 168 * scale;
+    const r = 26 * scale;
+    // Ball bottom high enough that a lying hitbox fits under it
+    const pivotY = this.groundY - arm - r - 26;
     const go = this.add
       .image(x, pivotY, "pendulum")
       .setOrigin(0.5, 0)
@@ -620,14 +620,23 @@ export class PlayScene extends Phaser.Scene {
         );
       } else {
         const ball = this.pendulumBall(o);
-        hit =
-          Phaser.Math.Distance.Between(
-            ball.x,
-            ball.y,
-            hazard.centerX,
-            hazard.centerY,
-          ) <
-          o.r + Math.min(hazard.width, hazard.height) * 0.28;
+        if (this.ducking) {
+          // Lying: only die if the ball actually dips into the low hitbox
+          const duck = pb;
+          const ballBottom = ball.y + o.r * 0.65;
+          const nearX =
+            Math.abs(ball.x - duck.centerX) < duck.width * 0.5 + o.r * 0.45;
+          hit = nearX && ballBottom >= duck.y;
+        } else {
+          hit =
+            Phaser.Math.Distance.Between(
+              ball.x,
+              ball.y,
+              hazard.centerX,
+              hazard.centerY,
+            ) <
+            o.r + Math.min(hazard.width, hazard.height) * 0.28;
+        }
       }
       if (hit) {
         this.onHit();
