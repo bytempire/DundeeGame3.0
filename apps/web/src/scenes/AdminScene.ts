@@ -81,35 +81,60 @@ export class AdminScene extends Phaser.Scene {
     panel.style.cssText = [
       "position:absolute",
       "left:50%",
-      "top:18%",
+      "top:16%",
       "transform:translateX(-50%)",
-      "width:min(420px,92vw)",
+      "width:92%",
+      "max-width:420px",
+      "box-sizing:border-box",
+      "padding:0",
       "z-index:40",
       "font-family:Georgia,serif",
       "color:#1f2a44",
       "display:flex",
       "flex-direction:column",
       "gap:10px",
+      "overflow:hidden",
     ].join(";");
 
     const ta = document.createElement("textarea");
     ta.placeholder = "Текст сообщения…";
     ta.rows = 5;
-    ta.style.cssText =
-      "width:100%;padding:10px;border:2px solid #1f2a44;border-radius:10px;background:#f4f1e8;resize:vertical;font:italic 15px Georgia,serif;";
+    ta.style.cssText = [
+      "display:block",
+      "width:100%",
+      "max-width:100%",
+      "box-sizing:border-box",
+      "padding:10px",
+      "border:2px solid #1f2a44",
+      "border-radius:10px",
+      "background:#f4f1e8",
+      "resize:vertical",
+      "font:italic 15px Georgia,serif",
+    ].join(";");
 
     const file = document.createElement("input");
     file.type = "file";
     file.accept = "image/*";
-    file.style.cssText = "font:14px Georgia,serif;";
+    file.style.cssText =
+      "display:block;width:100%;max-width:100%;box-sizing:border-box;font:14px Georgia,serif;";
 
     const status = document.createElement("div");
-    status.style.cssText = "min-height:1.2em;font:italic 13px Georgia,serif;color:#4a5a78;";
+    status.style.cssText =
+      "min-height:1.2em;font:italic 13px Georgia,serif;color:#4a5a78;word-break:break-word;";
 
     const btn = document.createElement("button");
     btn.textContent = "Отправить всем";
-    btn.style.cssText =
-      "padding:12px;border:2px solid #1f2a44;border-radius:12px;background:#f4f1e8;font:italic 16px Georgia,serif;cursor:pointer;";
+    btn.style.cssText = [
+      "display:block",
+      "width:100%",
+      "box-sizing:border-box",
+      "padding:12px",
+      "border:2px solid #1f2a44",
+      "border-radius:12px",
+      "background:#f4f1e8",
+      "font:italic 16px Georgia,serif",
+      "cursor:pointer",
+    ].join(";");
 
     btn.onclick = () => {
       void this.send(ta.value, file.files?.[0] ?? null, status, btn);
