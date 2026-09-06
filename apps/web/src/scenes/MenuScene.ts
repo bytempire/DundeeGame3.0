@@ -135,7 +135,7 @@ export class MenuScene extends Phaser.Scene {
     }
 
     const lines = entries
-      .map((e) => `${e.rank}. ${e.name} — ${e.distance}`)
+      .map((e) => `${e.rank}. ${e.name} — ${e.distance} м`)
       .join("\n");
     const list = this.add
       .text(width / 2, height * 0.22, lines, {

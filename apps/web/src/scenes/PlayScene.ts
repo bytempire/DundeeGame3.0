@@ -65,6 +65,8 @@ const DUCK_OX = 60;
 const DUCK_OY = 240;
 const BASE_SPEED = 280;
 const SPEED_GAIN = 8;
+/** One platform tile width in px = 1 meter of run distance */
+const METERS_PER_TILE_PX = 160;
 
 export class PlayScene extends Phaser.Scene {
   private player!: Phaser.Physics.Arcade.Sprite;
@@ -379,7 +381,7 @@ export class PlayScene extends Phaser.Scene {
     this.scrollSpeed = BASE_SPEED + Math.floor(this.distance / 100) * SPEED_GAIN;
     this.maxSpeedSeen = Math.max(this.maxSpeedSeen, this.scrollSpeed / 10);
     const dx = (this.scrollSpeed * delta) / 1000;
-    this.distance += dx / 10;
+    this.distance += dx / METERS_PER_TILE_PX;
     this.paper.tilePositionX += dx;
     this.path.tilePositionX += dx;
 
@@ -407,7 +409,7 @@ export class PlayScene extends Phaser.Scene {
     if (this.player.y > this.scale.height + 80) this.onHit();
 
     this.hud.setText(
-      `Дистанция: ${Math.floor(this.distance)}\nКлючи: ${this.pickupCoins}\nПопытки: ${this.freeLeft()} бесплатно` +
+      `Дистанция: ${Math.floor(this.distance)} м\nКлючи: ${this.pickupCoins}\nПопытки: ${this.freeLeft()} бесплатно` +
         (this.extraRevives > 0 ? ` + ${this.extraRevives}` : ""),
     );
   }
@@ -664,7 +666,7 @@ export class PlayScene extends Phaser.Scene {
       .text(
         width / 2,
         height * 0.34,
-        `Дистанция ${Math.floor(this.distance)}\nКлючи забега: ${this.pickupCoins}`,
+        `Дистанция ${Math.floor(this.distance)} м\nКлючи забега: ${this.pickupCoins}`,
         {
           fontFamily: "Georgia, 'Times New Roman', serif",
           fontSize: "16px",
