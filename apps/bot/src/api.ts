@@ -65,4 +65,15 @@ export const gameApi = {
       body: JSON.stringify(input),
     });
   },
+  broadcastTargets() {
+    return api<{
+      users: Array<{ id: string; telegramId: string; firstName: string | null }>;
+    }>("/internal/users/broadcast-targets");
+  },
+  markBlocked(telegramId: number | string) {
+    return api<{ ok: boolean }>("/internal/users/mark-blocked", {
+      method: "POST",
+      body: JSON.stringify({ telegramId }),
+    });
+  },
 };

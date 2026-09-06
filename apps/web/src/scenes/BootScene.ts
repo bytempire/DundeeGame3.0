@@ -16,6 +16,7 @@ export class BootScene extends Phaser.Scene {
     this.load.image("platform", `${base}assets/platform_static.png`);
     this.load.image("saw", `${base}assets/saw_blade.png`);
     this.load.image("spikes", `${base}assets/spike_trap.png`);
+    this.load.image("spikes5", `${base}assets/spikes_5.png`);
     this.load.image("pendulum", `${base}assets/pendulum.png`);
   }
 

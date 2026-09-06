@@ -6,8 +6,9 @@ import { meRoutes } from "./routes/me.js";
 import { starsRoutes } from "./routes/stars.js";
 import { internalUserRoutes } from "./routes/internal-users.js";
 import { leaderboardRoutes } from "./routes/leaderboard.js";
+import { adminRoutes } from "./routes/admin.js";
 
-const app = Fastify({ logger: true });
+const app = Fastify({ logger: true, bodyLimit: 12 * 1024 * 1024 });
 
 await app.register(cors, { origin: true });
 
@@ -18,6 +19,7 @@ await app.register(meRoutes);
 await app.register(starsRoutes);
 await app.register(internalUserRoutes);
 await app.register(leaderboardRoutes);
+await app.register(adminRoutes);
 
 try {
   await app.listen({ host: env.API_HOST, port: env.API_PORT });

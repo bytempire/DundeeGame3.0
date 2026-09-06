@@ -26,7 +26,7 @@ const STARS_PER_ATTEMPT = 5;
 
 type Obstacle = {
   go: Phaser.GameObjects.Image;
-  kind: "saw" | "spikes" | "pendulum";
+  kind: "saw" | "spikes" | "pendulum" | "spikes5";
   r: number; // saw / pendulum ball radius
   hw: number; // spikes half-width
   hh: number; // spikes half-height
@@ -38,10 +38,11 @@ type Obstacle = {
   arm: number; // pivot → ball center (world px)
 };
 
-const OBSTACLE_CYCLE: Array<"saw" | "spikes" | "pendulum"> = [
+const OBSTACLE_CYCLE: Array<"saw" | "spikes" | "pendulum" | "spikes5"> = [
   "saw",
   "spikes",
   "pendulum",
+  "spikes5",
 ];
 
 type Pickup = {
@@ -409,7 +410,7 @@ export class PlayScene extends Phaser.Scene {
     if (this.player.y > this.scale.height + 80) this.onHit();
 
     this.hud.setText(
-      `Дистанция: ${Math.floor(this.distance)} м\nКлючи: ${this.pickupCoins}\nПопытки: ${this.freeLeft()} бесплатно` +
+      `Дистанция: ${Math.floor(this.distance)} м\nКлючи: ${this.pickupCoins}\nПопытки: ${this.freeLeft()}` +
         (this.extraRevives > 0 ? ` + ${this.extraRevives}` : ""),
     );
   }
@@ -490,6 +491,31 @@ export class PlayScene extends Phaser.Scene {
       return;
     }
 
+    if (kind === "spikes5") {
+      // Wider 5-spike strip (296×68) — scale down to a jumpable width
+      const scale = 0.42 + this.rng() * 0.08;
+      const hw = 296 * scale * 0.45;
+      const hh = 68 * scale * 0.42;
+      const go = this.add
+        .image(x, this.groundY + 2, "spikes5")
+        .setOrigin(0.5, 1)
+        .setScale(scale)
+        .setDepth(5);
+      this.obstacles.push({
+        go,
+        kind: "spikes5",
+        r: 0,
+        hw,
+        hh,
+        spin: 0,
+        phase: 0,
+        amp: 0,
+        freq: 0,
+        arm: 0,
+      });
+      return;
+    }
+
     // Pendulum: must duck (lie) to pass; standing torso gets hit.
     const scale = 0.95;
     const arm = 170 * scale; // pivot → ball center
@@ -547,10 +573,10 @@ export class PlayScene extends Phaser.Scene {
     return new Phaser.Geom.Rectangle(b.x, b.y, b.width, b.height);
   }
 
-  /** Full sprite (feet → head) for pickups — body hitbox alone misses head-height keys. */
+  /** Collect box: body + head only (not full 320 frame padding above the scalp). */
   private playerCollectBounds() {
-    const h = 320 * PLAYER_SCALE;
-    const w = 320 * PLAYER_SCALE * 0.5;
+    const h = 320 * PLAYER_SCALE * 0.52;
+    const w = 320 * PLAYER_SCALE * 0.42;
     return new Phaser.Geom.Rectangle(
       this.player.x - w / 2,
       this.player.y - h,
@@ -583,7 +609,7 @@ export class PlayScene extends Phaser.Scene {
         hit =
           Phaser.Math.Distance.Between(o.go.x, o.go.y, pb.centerX, pb.centerY) <
           o.r + Math.min(pb.width, pb.height) * 0.35;
-      } else if (o.kind === "spikes") {
+      } else if (o.kind === "spikes" || o.kind === "spikes5") {
         const left = o.go.x - o.hw;
         const right = o.go.x + o.hw;
         const top = o.go.y - o.hh * 2;

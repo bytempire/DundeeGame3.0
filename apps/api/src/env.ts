@@ -16,9 +16,23 @@ const schema = z.object({
   VPN_BOT_USERNAME: z.string().default("VpnDundeeBot"),
   VPN_API_URL: z.string().url(),
   VPN_INTERNAL_TOKEN: z.string().min(8),
+  /** Comma-separated Telegram user ids allowed to use admin panel */
+  ADMIN_TELEGRAM_IDS: z.string().default("240579504"),
 });
 
 export const env = schema.parse(process.env);
+
+export function adminTelegramIds(): bigint[] {
+  return env.ADMIN_TELEGRAM_IDS.split(",")
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((s) => BigInt(s));
+}
+
+export function isAdminTelegramId(id: number | bigint | string): boolean {
+  const n = BigInt(id);
+  return adminTelegramIds().some((a) => a === n);
+}
 
 export const ECONOMY = {
   /** Keys come only from pickups (no distance bonus) */

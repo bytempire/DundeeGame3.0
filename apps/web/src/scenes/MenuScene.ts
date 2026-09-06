@@ -6,6 +6,7 @@ import {
   NOTEBOOK_MUTED,
 } from "../ui/notebookBg";
 import { addPenTextButton } from "../ui/penControls";
+import { isClientAdmin } from "./AdminScene";
 
 type MeResponse = {
   coinBalance: number;
@@ -71,6 +72,12 @@ export class MenuScene extends Phaser.Scene {
       const url = this.me?.vpnBotUrl ?? "https://t.me/VpnDundeeBot";
       getWebApp()?.openTelegramLink?.(url) ?? window.open(url, "_blank");
     });
+
+    if (isClientAdmin()) {
+      addPenTextButton(this, width / 2, height * 0.95, "Админ", () => {
+        this.scene.start("admin");
+      }, { height: 40, fontSize: "16px" });
+    }
 
     void this.refreshMe();
   }

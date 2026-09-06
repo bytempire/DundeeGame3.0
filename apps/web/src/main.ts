@@ -3,6 +3,7 @@ import { BootScene } from "./scenes/BootScene";
 import { MenuScene } from "./scenes/MenuScene";
 import { PlayScene } from "./scenes/PlayScene";
 import { LeaderboardScene } from "./scenes/LeaderboardScene";
+import { AdminScene } from "./scenes/AdminScene";
 import { getWebApp } from "./api";
 
 const tg = getWebApp();
@@ -26,7 +27,7 @@ const config: Phaser.Types.Core.GameConfig = {
       debug: false,
     },
   },
-  scene: [BootScene, MenuScene, PlayScene, LeaderboardScene],
+  scene: [BootScene, MenuScene, PlayScene, LeaderboardScene, AdminScene],
 };
 
 // eslint-disable-next-line no-new
