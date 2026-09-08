@@ -1,7 +1,7 @@
 {
-  "image": "dundee-hockey-v2.png",
-  "frameWidth": 320,
-  "frameHeight": 320,
+  "image": "dundee-hockey-v3.png",
+  "frameWidth": 384,
+  "frameHeight": 384,
   "columns": 4,
   "rows": 4,
   "animations": {
