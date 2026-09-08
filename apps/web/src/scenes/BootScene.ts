@@ -10,7 +10,7 @@ export class BootScene extends Phaser.Scene {
     const base = import.meta.env.BASE_URL;
     this.load.spritesheet(
       "crocodile",
-      `${base}assets/crocodile-hero/dundee-hockey-v6.png`,
+      `${base}assets/crocodile-hero/crocodile-hockey-spritesheet.png`,
       { frameWidth: 384, frameHeight: 384 },
     );
     this.load.image("platform", `${base}assets/platform_static.png`);
@@ -27,7 +27,7 @@ export class BootScene extends Phaser.Scene {
     this.anims.create({
       key: "idle",
       frames: this.anims.generateFrameNumbers("crocodile", { start: 0, end: 3 }),
-      frameRate: 4,
+      frameRate: 5,
       repeat: -1,
     });
     this.anims.create({
@@ -48,8 +48,8 @@ export class BootScene extends Phaser.Scene {
         start: 12,
         end: 15,
       }),
-      frameRate: 6,
-      repeat: -1,
+      frameRate: 8,
+      repeat: 0,
     });
 
     this.scene.start("menu");

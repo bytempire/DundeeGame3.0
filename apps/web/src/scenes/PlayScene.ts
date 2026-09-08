@@ -180,7 +180,8 @@ export class PlayScene extends Phaser.Scene {
 
     // Origin at feet so y = groundY sits on the path
     this.player = this.physics.add.sprite(width * 0.22, this.groundY + 2, "crocodile");
-    this.player.setOrigin(0.5, 1);
+    // Pack anchor (feet slightly above frame bottom)
+    this.player.setOrigin(0.5, 0.9375);
     this.player.setScale(PLAYER_SCALE);
     this.player.setCollideWorldBounds(false);
     this.player.setDepth(10);
