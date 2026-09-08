@@ -33,7 +33,7 @@ export class MenuScene extends Phaser.Scene {
     addNotebookBackground(this);
 
     this.add
-      .text(width / 2, height * 0.12, "DUNDEE RUNNER", {
+      .text(width / 2, height * 0.1, "DUNDEE RUNNER", {
         fontFamily: "Georgia, 'Times New Roman', serif",
         fontSize: "34px",
         color: NOTEBOOK_INK,
@@ -41,13 +41,16 @@ export class MenuScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
+    // Hero preview on the menu (feet-anchored)
     this.add
-      .sprite(width / 2, height * 0.3, "crocodile")
-      .setScale(0.45)
+      .sprite(width / 2, height * 0.4, "crocodile")
+      .setOrigin(0.5, 1)
+      .setScale(0.58)
+      .setDepth(5)
       .play("idle");
 
     this.statusText = this.add
-      .text(width / 2, height * 0.44, "Загрузка…", {
+      .text(width / 2, height * 0.46, "Загрузка…", {
         fontFamily: "Georgia, 'Times New Roman', serif",
         fontSize: "14px",
         color: NOTEBOOK_MUTED,
