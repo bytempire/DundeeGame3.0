@@ -52,18 +52,21 @@ type Pickup = {
 };
 
 const GROUND_Y_RATIO = 0.82;
-const PLAYER_SCALE = 0.2;
+/** Frame size of dundee-hockey spritesheet */
+const FRAME = 384;
+/** Keep on-screen size close to the old 320@0.2 hero */
+const PLAYER_SCALE = 0.17;
 const JUMP_VELOCITY = -560;
 const COYOTE_MS = 100;
 const JUMP_BUFFER_MS = 120;
-const BODY_W = 100;
-const BODY_H = 160;
-const BODY_OX = 110;
-const BODY_OY = 150;
-const DUCK_W = 200;
-const DUCK_H = 70;
-const DUCK_OX = 60;
-const DUCK_OY = 240;
+const BODY_W = 120;
+const BODY_H = 192;
+const BODY_OX = 132;
+const BODY_OY = 180;
+const DUCK_W = 240;
+const DUCK_H = 84;
+const DUCK_OX = 72;
+const DUCK_OY = 288;
 const BASE_SPEED = 280;
 const SPEED_GAIN = 8;
 /** One platform tile width in px = 1 meter of run distance */
@@ -598,8 +601,8 @@ export class PlayScene extends Phaser.Scene {
 
   /** Collect box: feet → head (sprite height). Higher keys still need a jump. */
   private playerCollectBounds() {
-    const h = 320 * PLAYER_SCALE * 0.95;
-    const w = 320 * PLAYER_SCALE * 0.55;
+    const h = FRAME * PLAYER_SCALE * 0.95;
+    const w = FRAME * PLAYER_SCALE * 0.55;
     return new Phaser.Geom.Rectangle(
       this.player.x - w / 2,
       this.player.y - h,
@@ -611,8 +614,8 @@ export class PlayScene extends Phaser.Scene {
   /** Standing: full height for overhead traps; ducking: feet hitbox only. */
   private playerHazardBounds() {
     if (this.ducking) return this.playerBounds();
-    const h = 320 * PLAYER_SCALE * 0.88;
-    const w = 320 * PLAYER_SCALE * 0.38;
+    const h = FRAME * PLAYER_SCALE * 0.88;
+    const w = FRAME * PLAYER_SCALE * 0.38;
     return new Phaser.Geom.Rectangle(
       this.player.x - w / 2,
       this.player.y - h,

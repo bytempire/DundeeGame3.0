@@ -10,8 +10,8 @@ export class BootScene extends Phaser.Scene {
     const base = import.meta.env.BASE_URL;
     this.load.spritesheet(
       "crocodile",
-      `${base}assets/crocodile-hero/dundee-hockey-v2.png`,
-      { frameWidth: 320, frameHeight: 320 },
+      `${base}assets/crocodile-hero/dundee-hockey-v3.png`,
+      { frameWidth: 384, frameHeight: 384 },
     );
     this.load.image("platform", `${base}assets/platform_static.png`);
     this.load.image("saw", `${base}assets/saw_blade.png`);
@@ -22,6 +22,8 @@ export class BootScene extends Phaser.Scene {
 
   create() {
     ensureKeyTexture(this);
+    // Smooth downscale on menu / mobile (avoids chunky edges)
+    this.textures.get("crocodile").setFilter(Phaser.Textures.FilterMode.LINEAR);
     this.anims.create({
       key: "idle",
       frames: this.anims.generateFrameNumbers("crocodile", { start: 0, end: 3 }),
