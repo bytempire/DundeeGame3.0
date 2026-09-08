@@ -10,7 +10,7 @@ export class BootScene extends Phaser.Scene {
     const base = import.meta.env.BASE_URL;
     this.load.spritesheet(
       "crocodile",
-      `${base}assets/crocodile-hero/crocodile-hockey-spritesheet.png`,
+      `${base}assets/crocodile-hero/crocodile-hockey-clean.png`,
       { frameWidth: 384, frameHeight: 384 },
     );
     this.load.image("platform", `${base}assets/platform_static.png`);
@@ -22,7 +22,7 @@ export class BootScene extends Phaser.Scene {
 
   create() {
     ensureKeyTexture(this);
-    // Smooth downscale on menu / mobile (avoids chunky edges)
+    // LINEAR + alpha-bleed sheet avoids dark/white filter halos when scaled
     this.textures.get("crocodile").setFilter(Phaser.Textures.FilterMode.LINEAR);
     this.anims.create({
       key: "idle",

@@ -14,6 +14,12 @@ const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
   parent: "game",
   backgroundColor: "#f4f1e8",
+  roundPixels: true,
+  render: {
+    antialias: true,
+    pixelArt: false,
+    transparent: false,
+  },
   scale: {
     mode: Phaser.Scale.RESIZE,
     autoCenter: Phaser.Scale.CENTER_BOTH,
