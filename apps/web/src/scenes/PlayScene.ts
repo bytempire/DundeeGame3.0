@@ -72,8 +72,8 @@ const METERS_PER_TILE_PX = 160;
 const KEY_CHEST_OFF = 22;
 /** Jump collect — above ground traps; standing cannot reach */
 const KEY_JUMP_OFF = 92;
-/** Bait jump-key every N meters, placed just before a ground trap */
-const BAIT_EVERY_M = 25;
+/** Bait jump-key before every N-th wide spike strip */
+const BAIT_EVERY_SPIKES5 = 3;
 /** How far before the trap the bait key sits (px) */
 const BAIT_LEAD_PX = 90;
 
@@ -110,8 +110,8 @@ export class PlayScene extends Phaser.Scene {
   private obstacleIdx = 0;
   private ducking = false;
   private controls!: Phaser.GameObjects.Container;
-  /** Next distance (m) at which the following ground trap gets a bait key in front */
-  private nextBaitAt = BAIT_EVERY_M;
+  /** Count of spikes5 spawned this run (bait on every N-th) */
+  private spikes5Count = 0;
 
   constructor() {
     super("play");
@@ -133,7 +133,7 @@ export class PlayScene extends Phaser.Scene {
     this.jumping = false;
     this.obstacleIdx = 0;
     this.ducking = false;
-    this.nextBaitAt = BAIT_EVERY_M;
+    this.spikes5Count = 0;
     this.clearWorldObjects();
     this.overlay?.destroy(true);
     this.overlay = undefined;
@@ -567,7 +567,7 @@ export class PlayScene extends Phaser.Scene {
   /**
    * Keys follow traps (no extra traps):
    * - pendulum → safe chest key underneath (duck)
-   * - every 25 m ground trap → bait jump-key just before it (no key above)
+   * - every 3rd spikes5 → bait jump-key just before it (no key above)
    * - other ground traps → safe jump-key above (clear the trap)
    */
   private attachKeyForObstacle(
@@ -579,10 +579,12 @@ export class PlayScene extends Phaser.Scene {
       return;
     }
 
-    if (this.distance >= this.nextBaitAt) {
-      this.nextBaitAt += BAIT_EVERY_M;
-      this.spawnKeyAt(trapX - BAIT_LEAD_PX, this.groundY - KEY_JUMP_OFF);
-      return;
+    if (kind === "spikes5") {
+      this.spikes5Count += 1;
+      if (this.spikes5Count % BAIT_EVERY_SPIKES5 === 0) {
+        this.spawnKeyAt(trapX - BAIT_LEAD_PX, this.groundY - KEY_JUMP_OFF);
+        return;
+      }
     }
 
     this.spawnKeyAt(trapX, this.groundY - KEY_JUMP_OFF);
@@ -893,8 +895,7 @@ export class PlayScene extends Phaser.Scene {
     this.dead = false;
     this.clearWorldObjects();
     this.obstacleIdx = 0;
-    this.nextBaitAt =
-      Math.floor(this.distance / BAIT_EVERY_M) * BAIT_EVERY_M + BAIT_EVERY_M;
+    this.spikes5Count = 0;
     this.setDuck(false);
     this.player.setPosition(this.scale.width * 0.22, this.groundY + 2);
     const body = this.player.body as Phaser.Physics.Arcade.Body;
