@@ -573,10 +573,10 @@ export class PlayScene extends Phaser.Scene {
     return new Phaser.Geom.Rectangle(b.x, b.y, b.width, b.height);
   }
 
-  /** Collect box: body + head only (not full 320 frame padding above the scalp). */
+  /** Collect box: feet → head (sprite height). Higher keys still need a jump. */
   private playerCollectBounds() {
-    const h = 320 * PLAYER_SCALE * 0.52;
-    const w = 320 * PLAYER_SCALE * 0.42;
+    const h = 320 * PLAYER_SCALE * 0.95;
+    const w = 320 * PLAYER_SCALE * 0.55;
     return new Phaser.Geom.Rectangle(
       this.player.x - w / 2,
       this.player.y - h,
