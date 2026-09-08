@@ -68,8 +68,8 @@ const BASE_SPEED = 280;
 const SPEED_GAIN = 8;
 /** One platform tile width in px = 1 meter of run distance */
 const METERS_PER_TILE_PX = 160;
-/** Standing / duck collect — under pendulum */
-const KEY_CHEST_OFF = 40;
+/** Duck collect — under pendulum (low, near the path) */
+const KEY_CHEST_OFF = 22;
 /** Jump collect — above ground traps; standing cannot reach */
 const KEY_JUMP_OFF = 92;
 /** Bait jump-key every N meters, placed just before a ground trap */
