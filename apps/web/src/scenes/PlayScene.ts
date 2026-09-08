@@ -74,8 +74,9 @@ const KEY_CHEST_OFF = 22;
 const KEY_JUMP_OFF = 92;
 /** Bait jump-key before every N-th wide spike strip */
 const BAIT_EVERY_SPIKES5 = 3;
-/** How far before the trap the bait key sits (px) */
-const BAIT_LEAD_PX = 90;
+/** How far before the trap the bait key sits (px).
+ *  Must exceed jump air-scroll so a late jump for the spikes cannot still grab it. */
+const BAIT_LEAD_PX = 200;
 
 export class PlayScene extends Phaser.Scene {
   private player!: Phaser.Physics.Arcade.Sprite;
