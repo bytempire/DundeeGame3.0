@@ -68,6 +68,14 @@ const BASE_SPEED = 280;
 const SPEED_GAIN = 8;
 /** One platform tile width in px = 1 meter of run distance */
 const METERS_PER_TILE_PX = 160;
+/** Standing collect — chest-high keys */
+const KEY_CHEST_OFF = 40;
+/** Needs a jump; standing collect top is ~61px */
+const KEY_JUMP_OFF = 92;
+/** Bait jump-key + trap every N meters */
+const BAIT_EVERY_M = 25;
+/** Horizontal clear zone for safe keys (px from spawn x) */
+const KEY_SAFE_GAP = 200;
 
 export class PlayScene extends Phaser.Scene {
   private player!: Phaser.Physics.Arcade.Sprite;
@@ -103,6 +111,10 @@ export class PlayScene extends Phaser.Scene {
   private obstacleIdx = 0;
   private ducking = false;
   private controls!: Phaser.GameObjects.Container;
+  /** Next distance (m) to spawn a bait jump-key over a trap */
+  private nextBaitAt = BAIT_EVERY_M;
+  /** Alternate safe key heights: false = chest, true = jump */
+  private nextKeyJump = false;
 
   constructor() {
     super("play");
@@ -125,6 +137,8 @@ export class PlayScene extends Phaser.Scene {
     this.jumping = false;
     this.obstacleIdx = 0;
     this.ducking = false;
+    this.nextBaitAt = BAIT_EVERY_M;
+    this.nextKeyJump = false;
     this.clearWorldObjects();
     this.overlay?.destroy(true);
     this.overlay = undefined;
@@ -389,6 +403,14 @@ export class PlayScene extends Phaser.Scene {
     this.spawnAcc += delta;
     this.coinAcc += delta;
 
+    // Every 25 m: jump-height key over a trap (run under = safe, jump = die)
+    if (this.distance >= this.nextBaitAt) {
+      this.nextBaitAt += BAIT_EVERY_M;
+      this.spawnBaitBundle();
+      this.spawnAcc = 0;
+      this.coinAcc = 0;
+    }
+
     // Time between obstacles (ms). Keep wide so one jump clears before next.
     const gap = Math.max(1750 - this.distance * 0.2, 1300);
     if (this.spawnAcc > gap) {
@@ -399,7 +421,7 @@ export class PlayScene extends Phaser.Scene {
     }
     if (this.coinAcc > 1100 + this.rng() * 900) {
       this.coinAcc = 0;
-      this.spawnKey();
+      this.spawnSafeKey();
     }
 
     this.scrollWorld(dx, delta);
@@ -550,17 +572,61 @@ export class PlayScene extends Phaser.Scene {
     };
   }
 
-  private spawnKey() {
+  private nearTrap(x: number, gap = KEY_SAFE_GAP) {
+    return this.obstacles.some((o) => Math.abs(o.go.x - x) < gap);
+  }
+
+  /** Jump-key over spikes: collect only by jumping into the trap. */
+  private spawnBaitBundle() {
+    const { width } = this.scale;
+    const x = width + 80;
+
+    const scale = 0.72 + this.rng() * 0.1;
+    const hw = 96 * scale * 0.45;
+    const hh = 36 * scale * 0.45;
+    const trap = this.add
+      .image(x, this.groundY + 2, "spikes")
+      .setOrigin(0.5, 1)
+      .setScale(scale)
+      .setDepth(5);
+    this.obstacles.push({
+      go: trap,
+      kind: "spikes",
+      r: 0,
+      hw,
+      hh,
+      spin: 0,
+      phase: 0,
+      amp: 0,
+      freq: 0,
+      arm: 0,
+    });
+
+    const r = 16;
+    const key = this.add
+      .image(x, this.groundY - KEY_JUMP_OFF, "pickup-key")
+      .setDepth(6)
+      .setScale(1.05);
+    this.coins.push({ go: key, r, taken: false });
+  }
+
+  /** Chest or jump key in a clear gap — no trap under/near. */
+  private spawnSafeKey() {
     const { width } = this.scale;
     const r = 16;
     const x = width + 30;
-    // Never sit low right above a trap — only spawn in clear gaps
-    const nearTrap = this.obstacles.some((o) => Math.abs(o.go.x - x) < 160);
-    if (nearTrap) {
-      this.coinAcc = 500; // try again soon in the next gap
+    if (this.nearTrap(x)) {
+      this.coinAcc = 500;
       return;
     }
-    const y = this.groundY - 28 - this.rng() * 55;
+    const jump = this.nextKeyJump;
+    // Jump-height needs a wider clear landing ahead
+    if (jump && this.nearTrap(x, KEY_SAFE_GAP + 80)) {
+      this.coinAcc = 500;
+      return;
+    }
+    this.nextKeyJump = !this.nextKeyJump;
+    const y = this.groundY - (jump ? KEY_JUMP_OFF : KEY_CHEST_OFF);
     const go = this.add
       .image(x, y, "pickup-key")
       .setDepth(6)
@@ -873,6 +939,8 @@ export class PlayScene extends Phaser.Scene {
     this.dead = false;
     this.clearWorldObjects();
     this.obstacleIdx = 0;
+    this.nextBaitAt =
+      Math.floor(this.distance / BAIT_EVERY_M) * BAIT_EVERY_M + BAIT_EVERY_M;
     this.setDuck(false);
     this.player.setPosition(this.scale.width * 0.22, this.groundY + 2);
     const body = this.player.body as Phaser.Physics.Arcade.Body;
