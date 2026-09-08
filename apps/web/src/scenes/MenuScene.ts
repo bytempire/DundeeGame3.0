@@ -45,7 +45,7 @@ export class MenuScene extends Phaser.Scene {
     this.add
       .sprite(width / 2, height * 0.4, "crocodile")
       .setOrigin(0.5, 1)
-      .setScale(0.5)
+      .setScale(0.72)
       .setDepth(5)
       .play("idle");
 

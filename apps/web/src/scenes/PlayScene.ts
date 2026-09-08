@@ -53,20 +53,20 @@ type Pickup = {
 
 const GROUND_Y_RATIO = 0.82;
 /** Frame size of dundee-hockey spritesheet */
-const FRAME = 384;
-/** Keep on-screen size close to the old 320@0.2 hero */
-const PLAYER_SCALE = 0.17;
+const FRAME = 256;
+/** Keep on-screen size close to previous hero */
+const PLAYER_SCALE = 0.26;
 const JUMP_VELOCITY = -560;
 const COYOTE_MS = 100;
 const JUMP_BUFFER_MS = 120;
-const BODY_W = 120;
-const BODY_H = 192;
-const BODY_OX = 132;
-const BODY_OY = 180;
-const DUCK_W = 240;
-const DUCK_H = 84;
-const DUCK_OX = 72;
-const DUCK_OY = 288;
+const BODY_W = 80;
+const BODY_H = 128;
+const BODY_OX = 88;
+const BODY_OY = 120;
+const DUCK_W = 160;
+const DUCK_H = 56;
+const DUCK_OX = 48;
+const DUCK_OY = 192;
 const BASE_SPEED = 280;
 const SPEED_GAIN = 8;
 /** One platform tile width in px = 1 meter of run distance */

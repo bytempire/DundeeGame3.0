@@ -10,8 +10,8 @@ export class BootScene extends Phaser.Scene {
     const base = import.meta.env.BASE_URL;
     this.load.spritesheet(
       "crocodile",
-      `${base}assets/crocodile-hero/dundee-hockey-v4.png`,
-      { frameWidth: 384, frameHeight: 384 },
+      `${base}assets/crocodile-hero/dundee-hockey-v5.png`,
+      { frameWidth: 256, frameHeight: 256 },
     );
     this.load.image("platform", `${base}assets/platform_static.png`);
     this.load.image("saw", `${base}assets/saw_blade.png`);
