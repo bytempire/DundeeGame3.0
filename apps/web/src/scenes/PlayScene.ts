@@ -52,7 +52,7 @@ type Pickup = {
 };
 
 const GROUND_Y_RATIO = 0.82;
-/** Frame size of dundee-hockey spritesheet */
+/** Frame size of crocodile-hockey spritesheet */
 const FRAME = 384;
 /** Keep on-screen size close to previous hero */
 const PLAYER_SCALE = 0.17;
