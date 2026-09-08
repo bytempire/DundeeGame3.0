@@ -68,14 +68,14 @@ const BASE_SPEED = 280;
 const SPEED_GAIN = 8;
 /** One platform tile width in px = 1 meter of run distance */
 const METERS_PER_TILE_PX = 160;
-/** Standing collect — chest-high keys */
+/** Standing / duck collect — under pendulum */
 const KEY_CHEST_OFF = 40;
-/** Needs a jump; standing collect top is ~61px */
+/** Jump collect — above ground traps; standing cannot reach */
 const KEY_JUMP_OFF = 92;
-/** Bait jump-key + trap every N meters */
+/** Bait jump-key every N meters, placed just before a ground trap */
 const BAIT_EVERY_M = 25;
-/** Horizontal clear zone for safe keys (px from spawn x) */
-const KEY_SAFE_GAP = 200;
+/** How far before the trap the bait key sits (px) */
+const BAIT_LEAD_PX = 90;
 
 export class PlayScene extends Phaser.Scene {
   private player!: Phaser.Physics.Arcade.Sprite;
@@ -100,7 +100,6 @@ export class PlayScene extends Phaser.Scene {
   private coyoteMs = 0;
   private jumpBufferMs = 0;
   private spawnAcc = 0;
-  private coinAcc = 0;
   private startedAt = 0;
   private maxSpeedSeen = 0;
   private vpnBotUsername = "VpnDundeeBot";
@@ -111,10 +110,8 @@ export class PlayScene extends Phaser.Scene {
   private obstacleIdx = 0;
   private ducking = false;
   private controls!: Phaser.GameObjects.Container;
-  /** Next distance (m) to spawn a bait jump-key over a trap */
+  /** Next distance (m) at which the following ground trap gets a bait key in front */
   private nextBaitAt = BAIT_EVERY_M;
-  /** Alternate safe key heights: false = chest, true = jump */
-  private nextKeyJump = false;
 
   constructor() {
     super("play");
@@ -131,14 +128,12 @@ export class PlayScene extends Phaser.Scene {
     this.coyoteMs = 0;
     this.jumpBufferMs = 0;
     this.spawnAcc = 0; // first obstacle after full gap
-    this.coinAcc = 300;
     this.maxSpeedSeen = 0;
     this.runId = null;
     this.jumping = false;
     this.obstacleIdx = 0;
     this.ducking = false;
     this.nextBaitAt = BAIT_EVERY_M;
-    this.nextKeyJump = false;
     this.clearWorldObjects();
     this.overlay?.destroy(true);
     this.overlay = undefined;
@@ -401,27 +396,12 @@ export class PlayScene extends Phaser.Scene {
     this.path.tilePositionX += dx;
 
     this.spawnAcc += delta;
-    this.coinAcc += delta;
-
-    // Every 25 m: jump-height key over a trap (run under = safe, jump = die)
-    if (this.distance >= this.nextBaitAt) {
-      this.nextBaitAt += BAIT_EVERY_M;
-      this.spawnBaitBundle();
-      this.spawnAcc = 0;
-      this.coinAcc = 0;
-    }
 
     // Time between obstacles (ms). Keep wide so one jump clears before next.
     const gap = Math.max(1750 - this.distance * 0.2, 1300);
     if (this.spawnAcc > gap) {
       this.spawnAcc = 0;
       this.spawnObstacle();
-      // Soft delay so the next key lands after the trap, not on it
-      this.coinAcc = Math.min(this.coinAcc, 700);
-    }
-    if (this.coinAcc > 1100 + this.rng() * 900) {
-      this.coinAcc = 0;
-      this.spawnSafeKey();
     }
 
     this.scrollWorld(dx, delta);
@@ -486,6 +466,7 @@ export class PlayScene extends Phaser.Scene {
         freq: 0,
         arm: 0,
       });
+      this.attachKeyForObstacle(kind, x);
       return;
     }
 
@@ -510,6 +491,7 @@ export class PlayScene extends Phaser.Scene {
         freq: 0,
         arm: 0,
       });
+      this.attachKeyForObstacle(kind, x);
       return;
     }
 
@@ -535,6 +517,7 @@ export class PlayScene extends Phaser.Scene {
         freq: 0,
         arm: 0,
       });
+      this.attachKeyForObstacle(kind, x);
       return;
     }
 
@@ -561,6 +544,7 @@ export class PlayScene extends Phaser.Scene {
       freq: 2.2 + this.rng() * 0.6,
       arm,
     });
+    this.attachKeyForObstacle(kind, x);
   }
 
   private pendulumBall(o: Obstacle) {
@@ -572,66 +556,36 @@ export class PlayScene extends Phaser.Scene {
     };
   }
 
-  private nearTrap(x: number, gap = KEY_SAFE_GAP) {
-    return this.obstacles.some((o) => Math.abs(o.go.x - x) < gap);
-  }
-
-  /** Jump-key over spikes: collect only by jumping into the trap. */
-  private spawnBaitBundle() {
-    const { width } = this.scale;
-    const x = width + 80;
-
-    const scale = 0.72 + this.rng() * 0.1;
-    const hw = 96 * scale * 0.45;
-    const hh = 36 * scale * 0.45;
-    const trap = this.add
-      .image(x, this.groundY + 2, "spikes")
-      .setOrigin(0.5, 1)
-      .setScale(scale)
-      .setDepth(5);
-    this.obstacles.push({
-      go: trap,
-      kind: "spikes",
-      r: 0,
-      hw,
-      hh,
-      spin: 0,
-      phase: 0,
-      amp: 0,
-      freq: 0,
-      arm: 0,
-    });
-
-    const r = 16;
-    const key = this.add
-      .image(x, this.groundY - KEY_JUMP_OFF, "pickup-key")
-      .setDepth(6)
-      .setScale(1.05);
-    this.coins.push({ go: key, r, taken: false });
-  }
-
-  /** Chest or jump key in a clear gap — no trap under/near. */
-  private spawnSafeKey() {
-    const { width } = this.scale;
-    const r = 16;
-    const x = width + 30;
-    if (this.nearTrap(x)) {
-      this.coinAcc = 500;
-      return;
-    }
-    const jump = this.nextKeyJump;
-    // Jump-height needs a wider clear landing ahead
-    if (jump && this.nearTrap(x, KEY_SAFE_GAP + 80)) {
-      this.coinAcc = 500;
-      return;
-    }
-    this.nextKeyJump = !this.nextKeyJump;
-    const y = this.groundY - (jump ? KEY_JUMP_OFF : KEY_CHEST_OFF);
+  private spawnKeyAt(x: number, y: number) {
     const go = this.add
       .image(x, y, "pickup-key")
       .setDepth(6)
       .setScale(0.95 + this.rng() * 0.15);
-    this.coins.push({ go, r, taken: false });
+    this.coins.push({ go, r: 16, taken: false });
+  }
+
+  /**
+   * Keys follow traps (no extra traps):
+   * - pendulum → safe chest key underneath (duck)
+   * - every 25 m ground trap → bait jump-key just before it (no key above)
+   * - other ground traps → safe jump-key above (clear the trap)
+   */
+  private attachKeyForObstacle(
+    kind: "saw" | "spikes" | "pendulum" | "spikes5",
+    trapX: number,
+  ) {
+    if (kind === "pendulum") {
+      this.spawnKeyAt(trapX, this.groundY - KEY_CHEST_OFF);
+      return;
+    }
+
+    if (this.distance >= this.nextBaitAt) {
+      this.nextBaitAt += BAIT_EVERY_M;
+      this.spawnKeyAt(trapX - BAIT_LEAD_PX, this.groundY - KEY_JUMP_OFF);
+      return;
+    }
+
+    this.spawnKeyAt(trapX, this.groundY - KEY_JUMP_OFF);
   }
 
   private playerBounds() {
