@@ -7,10 +7,15 @@ import {
 } from "../ui/notebookBg";
 import { DPR, fontPx, px } from "../ui/dpr";
 
+/** Keep splash up so the stick-trick loop is actually visible (~3 loops). */
+const BOOT_MIN_MS = 5000;
+
 export class BootScene extends Phaser.Scene {
   private barFill!: Phaser.GameObjects.Rectangle;
   private barWidth = 0;
   private status!: Phaser.GameObjects.Text;
+  private assetsReady = false;
+  private splashDone = false;
 
   constructor() {
     super("boot");
@@ -29,6 +34,8 @@ export class BootScene extends Phaser.Scene {
   create() {
     const { width, height } = this.scale;
     addNotebookBackground(this);
+    this.assetsReady = false;
+    this.splashDone = false;
 
     this.textures
       .get("crocodile-trick")
@@ -90,6 +97,12 @@ export class BootScene extends Phaser.Scene {
       .rectangle(width / 2 - this.barWidth / 2, barY, 1, barH, ink, 0.9)
       .setOrigin(0, 0.5);
 
+    // Hold splash so the hero trick can play, even when assets are cached
+    this.time.delayedCall(BOOT_MIN_MS, () => {
+      this.splashDone = true;
+      this.tryEnterMenu();
+    });
+
     this.loadRunner();
   }
 
@@ -97,7 +110,6 @@ export class BootScene extends Phaser.Scene {
   private loadRunner() {
     const base = import.meta.env.BASE_URL;
 
-    // One sheet for gameplay (was duplicated as crocodile + crocodile-game)
     this.load.spritesheet(
       "crocodile-game",
       `${base}assets/crocodile-hero/crocodile-hockey-clean.png`,
@@ -119,10 +131,16 @@ export class BootScene extends Phaser.Scene {
     this.load.once("complete", () => {
       this.barFill.width = this.barWidth;
       this.status.setText("Загрузка… 100%");
-      this.finishBoot();
+      this.assetsReady = true;
+      this.tryEnterMenu();
     });
 
     this.load.start();
+  }
+
+  private tryEnterMenu() {
+    if (!this.assetsReady || !this.splashDone) return;
+    this.finishBoot();
   }
 
   private finishBoot() {
@@ -176,7 +194,6 @@ export class BootScene extends Phaser.Scene {
       });
     }
 
-    // Parallel background download of all boss packs
     this.scene.launch("warm-assets");
     this.scene.start("menu");
   }
