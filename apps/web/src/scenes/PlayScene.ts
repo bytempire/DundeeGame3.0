@@ -568,13 +568,13 @@ export class PlayScene extends Phaser.Scene {
     for (let i = this.obstacles.length - 1; i >= 0; i--) {
       const o = this.obstacles[i]!;
       o.go.x -= dx;
-      if (o.kind === "saw" || o.kind === "puck") {
+      if (o.kind === "saw") {
         o.go.angle += (o.spin * delta) / 1000;
       } else if (o.kind === "pendulum") {
         o.phase += (o.freq * delta) / 1000;
         o.go.setAngle(Math.sin(o.phase) * o.amp);
       }
-      // Flying puck closes in faster than the scroll
+      // Flying puck closes in faster than the scroll (no spin — slides like a puck)
       if (o.kind === "puck") {
         o.go.x -= (o.freq * delta) / 1000;
       }
@@ -702,7 +702,7 @@ export class PlayScene extends Phaser.Scene {
         r,
         hw: 0,
         hh: 0,
-        spin: 220 + this.rng() * 160,
+        spin: 0,
         phase: 0,
         amp: 0,
         freq: 90 * DPR + this.rng() * 50 * DPR, // extra approach speed
