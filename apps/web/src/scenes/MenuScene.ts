@@ -59,27 +59,31 @@ export class MenuScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    addPenTextButton(this, width / 2, height * 0.56, "Играть", () => {
+    addPenTextButton(this, width / 2, height * 0.54, "Играть", () => {
       this.scene.start("play");
     });
 
-    addPenTextButton(this, width / 2, height * 0.66, "Рекорды", () => {
+    addPenTextButton(this, width / 2, height * 0.63, "Босс-битвы", () => {
+      this.scene.start("boss-select");
+    });
+
+    addPenTextButton(this, width / 2, height * 0.72, "Рекорды", () => {
       this.scene.start("leaderboard");
     });
 
-    addPenTextButton(this, width / 2, height * 0.76, "Магазин VPN", () => {
+    addPenTextButton(this, width / 2, height * 0.81, "Магазин VPN", () => {
       void this.openShop();
     });
 
-    addPenTextButton(this, width / 2, height * 0.86, "Открыть VPN-бот", () => {
+    addPenTextButton(this, width / 2, height * 0.9, "Открыть VPN-бот", () => {
       const url = this.me?.vpnBotUrl ?? "https://t.me/VpnDundeeBot";
       getWebApp()?.openTelegramLink?.(url) ?? window.open(url, "_blank");
     });
 
     if (isClientAdmin()) {
-      addPenTextButton(this, width / 2, height * 0.95, "Админ", () => {
+      addPenTextButton(this, width / 2, height * 0.97, "Админ", () => {
         this.scene.start("admin");
-      }, { height: 40, fontSize: "16px" });
+      }, { height: 36, fontSize: "15px" });
     }
 
     void this.refreshMe();

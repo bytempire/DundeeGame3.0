@@ -1,0 +1,45 @@
+{
+  "id": "boar",
+  "name": "Кабан «Таран»",
+  "assets": {
+    "hero": "hero/atlas.json",
+    "boss": "boss/atlas.json",
+    "effects": "fx/atlas.json"
+  },
+  "hero": {
+    "hp": 3,
+    "damage": 1,
+    "invulnerabilityMs": 800,
+    "attackCooldownMs": 600,
+    "canAttackWhenCrouched": false,
+    "canAttackInAir": false,
+    "deathPriority": true
+  },
+  "boss": {
+    "hp": 9,
+    "damage": 1,
+    "attackWindupMs": 1050,
+    "attackCooldownMs": 2000,
+    "projectile": "puck_heavy",
+    "projectileSpeedPxPerSec": 330,
+    "lanePattern": [
+      "low",
+      "high"
+    ],
+    "faceLeftByFlipping": true,
+    "emitOnAttackFrameIndex": 2,
+    "interruptAttackOnHurt": true
+  },
+  "arena": {
+    "referenceWidth": 960,
+    "referenceHeight": 540,
+    "groundY": 480,
+    "lowLaneY": 447,
+    "highLaneY": 330,
+    "heroJumpHeight": 130,
+    "heroJumpDurationMs": 850,
+    "minimumOppositeLaneArrivalGapMs": 700
+  },
+  "behaviorNotes": "Тяжёлая низкая шайба, затем высокая. Между противоположными уклонениями оставлять не меньше 700 мс после прохождения предыдущей шайбы мимо героя.",
+  "prototypeValues": true
+}

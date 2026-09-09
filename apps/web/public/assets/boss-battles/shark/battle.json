@@ -1,0 +1,46 @@
+{
+  "id": "shark",
+  "name": "Акула «Снайпер»",
+  "assets": {
+    "hero": "hero/atlas.json",
+    "boss": "boss/atlas.json",
+    "effects": "fx/atlas.json"
+  },
+  "hero": {
+    "hp": 3,
+    "damage": 1,
+    "invulnerabilityMs": 800,
+    "attackCooldownMs": 600,
+    "canAttackWhenCrouched": false,
+    "canAttackInAir": false,
+    "deathPriority": true
+  },
+  "boss": {
+    "hp": 7,
+    "damage": 1,
+    "attackWindupMs": 700,
+    "attackCooldownMs": 1500,
+    "projectile": "puck_enemy",
+    "projectileSpeedPxPerSec": 470,
+    "lanePattern": [
+      "high",
+      "low",
+      "high"
+    ],
+    "faceLeftByFlipping": true,
+    "emitOnAttackFrameIndex": 2,
+    "interruptAttackOnHurt": true
+  },
+  "arena": {
+    "referenceWidth": 960,
+    "referenceHeight": 540,
+    "groundY": 480,
+    "lowLaneY": 447,
+    "highLaneY": 330,
+    "heroJumpHeight": 130,
+    "heroJumpDurationMs": 850,
+    "minimumOppositeLaneArrivalGapMs": 700
+  },
+  "behaviorNotes": "Быстрее медведя. Во время замаха зафиксировать высоту выстрела; после выпуска не перенаводить шайбу на героя.",
+  "prototypeValues": true
+}

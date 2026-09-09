@@ -4,6 +4,8 @@ import { MenuScene } from "./scenes/MenuScene";
 import { PlayScene } from "./scenes/PlayScene";
 import { LeaderboardScene } from "./scenes/LeaderboardScene";
 import { AdminScene } from "./scenes/AdminScene";
+import { BossSelectScene } from "./scenes/BossSelectScene";
+import { BossBattleScene } from "./scenes/BossBattleScene";
 import { getWebApp } from "./api";
 
 const tg = getWebApp();
@@ -33,7 +35,15 @@ const config: Phaser.Types.Core.GameConfig = {
       debug: false,
     },
   },
-  scene: [BootScene, MenuScene, PlayScene, LeaderboardScene, AdminScene],
+  scene: [
+    BootScene,
+    MenuScene,
+    PlayScene,
+    LeaderboardScene,
+    AdminScene,
+    BossSelectScene,
+    BossBattleScene,
+  ],
 };
 
 // eslint-disable-next-line no-new
