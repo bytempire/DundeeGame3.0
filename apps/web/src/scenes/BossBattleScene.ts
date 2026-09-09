@@ -73,6 +73,8 @@ export class BossBattleScene extends Phaser.Scene {
 
   private heroHp = 3;
   private bossHp = 5;
+  private heroHpMax = 3;
+  private bossHpMax = 5;
   private heroInvuln = 0;
   private heroAtkCd = 0;
   private ducking = false;
@@ -96,6 +98,8 @@ export class BossBattleScene extends Phaser.Scene {
   private robotArmored = true;
 
   private pucks: Puck[] = [];
+  private heroBar!: Phaser.GameObjects.Graphics;
+  private bossBar!: Phaser.GameObjects.Graphics;
   private heroHpText!: Phaser.GameObjects.Text;
   private bossHpText!: Phaser.GameObjects.Text;
   private statusText!: Phaser.GameObjects.Text;
@@ -168,6 +172,8 @@ export class BossBattleScene extends Phaser.Scene {
 
     this.heroHp = this.cfg.hero.hp;
     this.bossHp = this.cfg.boss.hp;
+    this.heroHpMax = this.cfg.hero.hp;
+    this.bossHpMax = this.cfg.boss.hp;
     this.nextBossAt = this.time.now + 1200;
 
     // Fight floor — same notebook platform strip as the runner
@@ -216,24 +222,28 @@ export class BossBattleScene extends Phaser.Scene {
       .setDepth(40);
 
     this.heroHpText = this.add
-      .text(px(16), px(48), "", {
+      .text(px(16), px(44), "Герой", {
         fontFamily: "Georgia, 'Times New Roman', serif",
-        fontSize: fontPx(16),
+        fontSize: fontPx(13),
         color: NOTEBOOK_INK,
         fontStyle: "italic",
       })
       .setDepth(40);
     this.bossHpText = this.add
-      .text(width - px(16), px(48), "", {
+      .text(width - px(16), px(44), "", {
         fontFamily: "Georgia, 'Times New Roman', serif",
-        fontSize: fontPx(16),
+        fontSize: fontPx(13),
         color: NOTEBOOK_INK,
         fontStyle: "italic",
       })
       .setOrigin(1, 0)
       .setDepth(40);
+
+    this.heroBar = this.add.graphics().setDepth(40);
+    this.bossBar = this.add.graphics().setDepth(40);
+
     this.statusText = this.add
-      .text(width / 2, px(72), "", {
+      .text(width / 2, px(88), "", {
         fontFamily: "Georgia, 'Times New Roman', serif",
         fontSize: fontPx(14),
         color: NOTEBOOK_MUTED,
@@ -362,12 +372,80 @@ export class BossBattleScene extends Phaser.Scene {
   }
 
   private refreshHud() {
-    this.heroHpText.setText(`♥ ${this.heroHp}`);
+    const { width } = this.scale;
+    const barW = px(120);
+    const barH = px(12);
+    const barY = px(64);
+    const ink = Phaser.Display.Color.HexStringToColor(NOTEBOOK_INK).color;
+    const heroFill = 0x3d8b5f;
+    const bossFill =
+      this.bossId === "robot" &&
+      this.robotArmored &&
+      this.time.now >= this.robotOverheatUntil &&
+      !this.bossDead
+        ? 0xc9a227
+        : 0xc0392b;
+
+    this.heroHpText.setText(`Герой ${this.heroHp}/${this.heroHpMax}`);
     const armor =
       this.bossId === "robot" && this.robotArmored && !this.bossDead
         ? " 🛡"
         : "";
-    this.bossHpText.setText(`${this.bossHp} ♥${armor}`);
+    this.bossHpText.setText(
+      `${this.bossHp}/${this.bossHpMax}${armor}`,
+    );
+
+    const drawBar = (
+      g: Phaser.GameObjects.Graphics,
+      x: number,
+      ratio: number,
+      fill: number,
+      fromRight: boolean,
+    ) => {
+      g.clear();
+      const left = fromRight ? x - barW : x;
+      g.fillStyle(0xf4f1e8, 0.95);
+      g.fillRoundedRect(left, barY, barW, barH, px(4));
+      g.lineStyle(2 * DPR, ink, 0.9);
+      g.strokeRoundedRect(left, barY, barW, barH, px(4));
+      const inner = Math.max(0, Math.min(1, ratio)) * (barW - px(4));
+      if (inner > 0) {
+        g.fillStyle(fill, 0.92);
+        if (fromRight) {
+          g.fillRoundedRect(
+            left + barW - px(2) - inner,
+            barY + px(2),
+            inner,
+            barH - px(4),
+            px(3),
+          );
+        } else {
+          g.fillRoundedRect(
+            left + px(2),
+            barY + px(2),
+            inner,
+            barH - px(4),
+            px(3),
+          );
+        }
+      }
+    };
+
+    drawBar(
+      this.heroBar,
+      px(16),
+      this.heroHpMax > 0 ? this.heroHp / this.heroHpMax : 0,
+      heroFill,
+      false,
+    );
+    drawBar(
+      this.bossBar,
+      width - px(16),
+      this.bossHpMax > 0 ? this.bossHp / this.bossHpMax : 0,
+      bossFill,
+      true,
+    );
+
     if (this.bossId === "robot" && this.time.now < this.robotOverheatUntil) {
       this.statusText.setText("Перегрев!");
     } else if (!this.ended) {
