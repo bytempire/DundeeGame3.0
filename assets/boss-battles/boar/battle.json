@@ -16,7 +16,7 @@
     "deathPriority": true
   },
   "boss": {
-    "hp": 9,
+    "hp": 18,
     "damage": 1,
     "attackWindupMs": 1050,
     "attackCooldownMs": 2000,
