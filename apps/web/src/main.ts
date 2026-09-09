@@ -5,6 +5,7 @@ import { PlayScene } from "./scenes/PlayScene";
 import { LeaderboardScene } from "./scenes/LeaderboardScene";
 import { AdminScene } from "./scenes/AdminScene";
 import { BossSelectScene } from "./scenes/BossSelectScene";
+import { BossIntroScene } from "./scenes/BossIntroScene";
 import { BossBattleScene } from "./scenes/BossBattleScene";
 import { getWebApp } from "./api";
 import { DPR, px } from "./ui/dpr";
@@ -54,6 +55,7 @@ const config: Phaser.Types.Core.GameConfig = {
     LeaderboardScene,
     AdminScene,
     BossSelectScene,
+    BossIntroScene,
     BossBattleScene,
   ],
 };

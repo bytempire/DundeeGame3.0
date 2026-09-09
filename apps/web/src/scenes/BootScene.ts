@@ -13,6 +13,7 @@ import {
   queueBossBattleAssets,
 } from "../boss/bossAssets";
 import { BOSSES } from "../boss/bossDefs";
+import { queueBearFeintAsset } from "./BossIntroScene";
 
 /** Splash stays on screen this long so the load screen is always visible. */
 const BOOT_MIN_MS = 5000;
@@ -139,6 +140,7 @@ export class BootScene extends Phaser.Scene {
     this.load.image("spikes5", `${base}assets/spikes_5.png`);
     this.load.image("pendulum", `${base}assets/pendulum.png`);
     queueBossBattleAssets(this);
+    queueBearFeintAsset(this);
 
     this.load.once("complete", () => {
       this.assetsReady = true;

@@ -546,7 +546,12 @@ export class PlayScene extends Phaser.Scene {
       bossesCleared: this.bossesCleared,
     };
     this.registry.set("runSnapshot", snap);
-    this.scene.start("boss-battle", { bossId: boss.id, fromRun: true });
+    // First boss gets a short feint cinematic; the rest go straight in
+    if (boss.id === "bear") {
+      this.scene.start("boss-intro", { bossId: boss.id, fromRun: true });
+    } else {
+      this.scene.start("boss-battle", { bossId: boss.id, fromRun: true });
+    }
   }
 
   private scrollWorld(dx: number, delta: number) {
