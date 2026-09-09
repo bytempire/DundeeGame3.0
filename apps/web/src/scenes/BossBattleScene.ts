@@ -156,11 +156,16 @@ export class BossBattleScene extends Phaser.Scene {
     this.ensureAnims();
 
     const { width, height } = this.scale;
-    // Smaller sprites + side anchors so stick reach doesn't eat the mid-ice
-    this.spriteScale = Math.min(0.34, (height * 0.32) / 384);
+    // Fit both full frames on screen with side padding
+    const maxByH = (height * 0.32) / 384;
+    const maxByW = (width * 0.4) / 512; // boss 512px cell must fit in ~40% width
+    this.spriteScale = Math.min(0.32, maxByH, maxByW);
     this.groundY = height * 0.78;
-    this.heroX = width * 0.12;
-    this.bossX = width * 0.88;
+    const pad = 10;
+    const heroHalf = 192 * this.spriteScale;
+    const bossHalf = 256 * this.spriteScale;
+    this.heroX = pad + heroHalf;
+    this.bossX = width - pad - bossHalf;
     // Lanes relative to hero body so high puck hits standing torso, not flies over
     const bodyH = 200 * this.spriteScale;
     this.lowY = this.groundY - bodyH * 0.22;
