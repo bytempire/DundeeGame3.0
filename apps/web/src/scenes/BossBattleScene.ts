@@ -269,13 +269,15 @@ export class BossBattleScene extends Phaser.Scene {
 
   private createControls(pathH: number) {
     const { width, height } = this.scale;
-    // Buttons sit on the strip below the path — a bit lower than mid-gap
+    // ↑ ↓ 🏒 — evenly under the path
     const place = (w: number, h: number, gy: number) => {
       const y = gy + pathH + (h - gy - pathH) * 0.72;
+      const gap = Math.min(w * 0.22, px(100));
+      const mid = w * 0.5;
       return {
-        upX: w * 0.18,
-        downX: w * 0.38,
-        hitX: w * 0.72,
+        upX: mid - gap,
+        downX: mid,
+        hitX: mid + gap,
         y,
       };
     };
@@ -283,19 +285,13 @@ export class BossBattleScene extends Phaser.Scene {
 
     const up = addPenButton(this, p0.upX, p0.y, "up", 50);
     const down = addPenButton(this, p0.downX, p0.y, "down", 50);
-    const hit = addPenTextButton(
-      this,
-      p0.hitX,
-      p0.y,
-      "Удар",
-      () => this.tryAttack(),
-      { width: 110, height: 52, fontSize: 18, depth: 50, paperFill: true },
-    );
+    const hit = addPenButton(this, p0.hitX, p0.y, "hit", 50);
 
     up.hit.on("pointerdown", () => this.tryJump());
     down.hit.on("pointerdown", () => this.setDuck(true));
     down.hit.on("pointerup", () => this.setDuck(false));
     down.hit.on("pointerupoutside", () => this.setDuck(false));
+    hit.hit.on("pointerdown", () => this.tryAttack());
 
     const layout = (gameSize: Phaser.Structs.Size) => {
       this.groundY = gameSize.height * 0.78;

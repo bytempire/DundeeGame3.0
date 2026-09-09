@@ -110,10 +110,31 @@ function strokeChevron(
   g.strokePath();
 }
 
+/** Small hockey puck glyph for the strike button. */
+function strokePuck(g: Phaser.GameObjects.Graphics, cx: number, cy: number) {
+  const r = px(11);
+  g.lineStyle(2.8 * DPR, INK, 0.95);
+  strokeWobblyCircle(g, cx, cy, r);
+  g.lineStyle(2.2 * DPR, INK, 0.75);
+  strokeWobblyCircle(g, cx, cy, r * 0.45);
+  // motion marks
+  g.lineStyle(2.4 * DPR, INK, 0.85);
+  g.beginPath();
+  g.moveTo(cx + r + px(4), cy - px(6));
+  g.lineTo(cx + r + px(14), cy - px(6));
+  g.moveTo(cx + r + px(6), cy);
+  g.lineTo(cx + r + px(16), cy);
+  g.moveTo(cx + r + px(4), cy + px(6));
+  g.lineTo(cx + r + px(14), cy + px(6));
+  g.strokePath();
+}
+
 export type PenButton = {
   root: Phaser.GameObjects.Container;
   hit: Phaser.GameObjects.Zone;
 };
+
+export type PenButtonKind = "up" | "down" | "hit";
 
 /**
  * Round control drawn like ballpoint ink on notebook paper.
@@ -122,7 +143,7 @@ export function addPenButton(
   scene: Phaser.Scene,
   x: number,
   y: number,
-  dir: "up" | "down",
+  kind: PenButtonKind,
   depth = 30,
 ): PenButton {
   const root = scene.add.container(x, y).setScrollFactor(0).setDepth(depth);
@@ -132,8 +153,12 @@ export function addPenButton(
   strokeWobblyCircle(g, 0, 0, r);
   g.lineStyle(2.2 * DPR, INK, 0.88);
   strokeWobblyCircle(g, 0.8 * DPR, -0.6 * DPR, r);
-  g.lineStyle(3 * DPR, INK, 0.95);
-  strokeChevron(g, 0, 0, dir);
+  if (kind === "hit") {
+    strokePuck(g, -px(2), 0);
+  } else {
+    g.lineStyle(3 * DPR, INK, 0.95);
+    strokeChevron(g, 0, 0, kind);
+  }
   root.add(g);
 
   const hit = scene.add
