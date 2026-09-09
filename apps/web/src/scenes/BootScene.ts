@@ -8,10 +8,17 @@ export class BootScene extends Phaser.Scene {
 
   preload() {
     const base = import.meta.env.BASE_URL;
+    // Hi-res for menu
     this.load.spritesheet(
       "crocodile",
       `${base}assets/crocodile-hero/crocodile-hockey-clean.png`,
       { frameWidth: 384, frameHeight: 384 },
+    );
+    // Pre-downscaled for gameplay (avoids blurry runtime shrink)
+    this.load.spritesheet(
+      "crocodile-game",
+      `${base}assets/crocodile-hero/crocodile-hockey-game.png`,
+      { frameWidth: 96, frameHeight: 96 },
     );
     this.load.image("platform", `${base}assets/platform_static.png`);
     this.load.image("saw", `${base}assets/saw_blade.png`);
@@ -22,29 +29,47 @@ export class BootScene extends Phaser.Scene {
 
   create() {
     ensureKeyTexture(this);
-    // LINEAR + alpha-bleed sheet avoids dark/white filter halos when scaled
     this.textures.get("crocodile").setFilter(Phaser.Textures.FilterMode.LINEAR);
+    this.textures
+      .get("crocodile-game")
+      .setFilter(Phaser.Textures.FilterMode.LINEAR);
+
     this.anims.create({
-      key: "idle",
+      key: "menu-idle",
       frames: this.anims.generateFrameNumbers("crocodile", { start: 0, end: 3 }),
       frameRate: 5,
       repeat: -1,
     });
     this.anims.create({
+      key: "idle",
+      frames: this.anims.generateFrameNumbers("crocodile-game", {
+        start: 0,
+        end: 3,
+      }),
+      frameRate: 5,
+      repeat: -1,
+    });
+    this.anims.create({
       key: "run",
-      frames: this.anims.generateFrameNumbers("crocodile", { start: 4, end: 7 }),
+      frames: this.anims.generateFrameNumbers("crocodile-game", {
+        start: 4,
+        end: 7,
+      }),
       frameRate: 10,
       repeat: -1,
     });
     this.anims.create({
       key: "jump",
-      frames: this.anims.generateFrameNumbers("crocodile", { start: 8, end: 11 }),
+      frames: this.anims.generateFrameNumbers("crocodile-game", {
+        start: 8,
+        end: 11,
+      }),
       frameRate: 8,
       repeat: 0,
     });
     this.anims.create({
       key: "lie",
-      frames: this.anims.generateFrameNumbers("crocodile", {
+      frames: this.anims.generateFrameNumbers("crocodile-game", {
         start: 12,
         end: 15,
       }),

@@ -1,9 +1,11 @@
-  "image": "crocodile-hockey-clean.png",
-  "frameWidth": 384,
-  "frameHeight": 384,
+{
+  "menuImage": "crocodile-hockey-clean.png",
+  "gameImage": "crocodile-hockey-game.png",
+  "menuFrame": 384,
+  "gameFrame": 96,
   "columns": 4,
   "rows": 4,
-  "anchor": { "x": 0.5, "y": 0.9375 },
+  "anchor": { "x": 0.5, "y": 1 },
   "animations": {
     "idle": { "frames": [0, 1, 2, 3], "fps": 5, "loop": true },
     "run": { "frames": [4, 5, 6, 7], "fps": 10, "loop": true },

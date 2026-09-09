@@ -52,22 +52,22 @@ type Pickup = {
 };
 
 const GROUND_Y_RATIO = 0.82;
-/** Frame size of crocodile-hockey spritesheet */
-const FRAME = 384;
-/** Keep on-screen size close to previous hero */
-const PLAYER_SCALE = 0.17;
+/** Frame size of in-game crocodile sheet (pre-scaled) */
+const FRAME = 96;
+/** Drawn at native sheet size for sharp pixels */
+const PLAYER_SCALE = 1;
 const JUMP_VELOCITY = -560;
 const COYOTE_MS = 100;
 const JUMP_BUFFER_MS = 120;
-/** Hitbox near the skates (source px, 384 frame) */
-const BODY_W = 110;
-const BODY_H = 150;
+/** Hitbox near the skates (source px, 96 frame) */
+const BODY_W = 28;
+const BODY_H = 38;
 const BODY_OX = Math.round((FRAME - BODY_W) / 2);
-const BODY_OY = FRAME - BODY_H - 6;
-const DUCK_W = 200;
-const DUCK_H = 70;
+const BODY_OY = FRAME - BODY_H - 2;
+const DUCK_W = 50;
+const DUCK_H = 18;
 const DUCK_OX = Math.round((FRAME - DUCK_W) / 2);
-const DUCK_OY = FRAME - DUCK_H - 6;
+const DUCK_OY = FRAME - DUCK_H - 2;
 const BASE_SPEED = 280;
 const SPEED_GAIN = 8;
 /** One platform tile width in px = 1 meter of run distance */
@@ -180,7 +180,11 @@ export class PlayScene extends Phaser.Scene {
     });
 
     // Origin at feet so y = groundY sits on the path
-    this.player = this.physics.add.sprite(width * 0.22, this.groundY, "crocodile");
+    this.player = this.physics.add.sprite(
+      width * 0.22,
+      this.groundY,
+      "crocodile-game",
+    );
     this.player.setOrigin(0.5, 1);
     this.player.setScale(PLAYER_SCALE);
     this.player.setCollideWorldBounds(false);

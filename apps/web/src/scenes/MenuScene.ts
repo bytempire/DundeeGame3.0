@@ -47,7 +47,7 @@ export class MenuScene extends Phaser.Scene {
       .setOrigin(0.5, 1)
       .setScale(0.52)
       .setDepth(5)
-      .play("idle");
+      .play("menu-idle");
 
     this.statusText = this.add
       .text(width / 2, height * 0.46, "Загрузка…", {
