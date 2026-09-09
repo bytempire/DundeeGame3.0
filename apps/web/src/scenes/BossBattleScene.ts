@@ -269,9 +269,10 @@ export class BossBattleScene extends Phaser.Scene {
 
   private createControls(pathH: number) {
     const { width, height } = this.scale;
-    // ↑ ↓ left cluster · puck strike on the right
+    // ↑ ↓ left · puck right — vertically centered under the path
     const place = (w: number, h: number, gy: number) => {
-      const y = gy + pathH + (h - gy - pathH) * 0.72;
+      const stripTop = gy + pathH;
+      const y = (stripTop + h) / 2;
       const pairGap = Math.min(w * 0.2, px(88));
       return {
         upX: w * 0.22,
