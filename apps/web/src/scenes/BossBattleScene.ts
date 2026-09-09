@@ -63,6 +63,7 @@ export class BossBattleScene extends Phaser.Scene {
 
   private hero!: Phaser.GameObjects.Sprite;
   private boss!: Phaser.GameObjects.Sprite;
+  private path!: Phaser.GameObjects.TileSprite;
   private groundY = 0;
   private heroX = 0;
   private bossX = 0;
@@ -161,27 +162,32 @@ export class BossBattleScene extends Phaser.Scene {
     const maxByH = (height * 0.42) / 384;
     const maxByW = (width * 0.36) / 512;
     this.spriteScale = Math.min(maxByH, maxByW);
-    this.groundY = height * 0.72;
-    const pad = px(12);
-    const heroHalf = 192 * this.spriteScale;
-    const bossHalf = 256 * this.spriteScale;
-    this.heroX = pad + heroHalf;
-    this.bossX = width - pad - bossHalf;
-    // Lanes relative to hero body so high puck hits standing torso, not flies over
-    const bodyH = 200 * this.spriteScale;
-    this.lowY = this.groundY - bodyH * 0.22;
-    this.highY = this.groundY - bodyH * 0.7;
 
     this.heroHp = this.cfg.hero.hp;
     this.bossHp = this.cfg.boss.hp;
     this.nextBossAt = this.time.now + 1200;
 
-    // Ice strip
+    // Fight floor — same notebook platform strip as the runner
+    const pathH = 24 * DPR;
+    this.groundY = height * 0.68;
+    const pad = px(12);
+    const heroHalf = 192 * this.spriteScale;
+    const bossHalf = 256 * this.spriteScale;
+    this.heroX = pad + heroHalf;
+    this.bossX = width - pad - bossHalf;
+    const bodyH = 200 * this.spriteScale;
+    this.lowY = this.groundY - bodyH * 0.22;
+    this.highY = this.groundY - bodyH * 0.7;
+
     const ice = this.add.graphics().setDepth(1);
-    ice.fillStyle(0xd7e8f5, 0.85);
-    ice.fillRect(0, this.groundY - px(8), width, height - this.groundY + px(8));
-    ice.lineStyle(2 * DPR, 0x6a8fad, 0.7);
-    ice.lineBetween(px(20), this.groundY - px(8), width - px(20), this.groundY - px(8));
+    ice.fillStyle(0xd7e8f5, 0.9);
+    ice.fillRect(0, this.groundY - px(4), width, height - this.groundY + px(4));
+
+    this.path = this.add
+      .tileSprite(width / 2, this.groundY + pathH / 2, width + 4, pathH, "platform")
+      .setScrollFactor(0)
+      .setDepth(2);
+    this.path.setTileScale(DPR, DPR);
 
     this.hero = this.add
       .sprite(this.heroX, this.groundY, HERO_KEY, HF.idle[0])
@@ -238,21 +244,7 @@ export class BossBattleScene extends Phaser.Scene {
       .setDepth(40);
     this.refreshHud();
 
-    const up = addPenButton(this, width * 0.18, height - px(56), "up", 50);
-    const down = addPenButton(this, width * 0.38, height - px(56), "down", 50);
-    up.hit.on("pointerdown", () => this.tryJump());
-    down.hit.on("pointerdown", () => this.setDuck(true));
-    down.hit.on("pointerup", () => this.setDuck(false));
-    down.hit.on("pointerupoutside", () => this.setDuck(false));
-
-    addPenTextButton(
-      this,
-      width * 0.72,
-      height - px(56),
-      "Удар",
-      () => this.tryAttack(),
-      { width: 110, height: 52, fontSize: 18, depth: 50, paperFill: true },
-    );
+    this.createControls(pathH);
 
     addPenTextButton(
       this,
@@ -277,6 +269,62 @@ export class BossBattleScene extends Phaser.Scene {
     }
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.clearPucks());
+  }
+
+  private createControls(pathH: number) {
+    const { width, height } = this.scale;
+    // Buttons sit on the strip below the path — a bit lower than mid-gap
+    const place = (w: number, h: number, gy: number) => {
+      const y = gy + pathH + (h - gy - pathH) * 0.62;
+      return {
+        upX: w * 0.18,
+        downX: w * 0.38,
+        hitX: w * 0.72,
+        y,
+      };
+    };
+    const p0 = place(width, height, this.groundY);
+
+    const up = addPenButton(this, p0.upX, p0.y, "up", 50);
+    const down = addPenButton(this, p0.downX, p0.y, "down", 50);
+    const hit = addPenTextButton(
+      this,
+      p0.hitX,
+      p0.y,
+      "Удар",
+      () => this.tryAttack(),
+      { width: 110, height: 52, fontSize: 18, depth: 50, paperFill: true },
+    );
+
+    up.hit.on("pointerdown", () => this.tryJump());
+    down.hit.on("pointerdown", () => this.setDuck(true));
+    down.hit.on("pointerup", () => this.setDuck(false));
+    down.hit.on("pointerupoutside", () => this.setDuck(false));
+
+    const layout = (gameSize: Phaser.Structs.Size) => {
+      this.groundY = gameSize.height * 0.68;
+      const pad = px(12);
+      this.heroX = pad + 192 * this.spriteScale;
+      this.bossX = gameSize.width - pad - 256 * this.spriteScale;
+      const bodyH = 200 * this.spriteScale;
+      this.lowY = this.groundY - bodyH * 0.22;
+      this.highY = this.groundY - bodyH * 0.7;
+      this.path.setPosition(
+        gameSize.width / 2,
+        this.groundY + pathH / 2,
+      );
+      this.path.width = gameSize.width + 4;
+      this.hero?.setPosition(this.heroX, this.groundY);
+      this.boss?.setPosition(this.bossX, this.groundY);
+      const p = place(gameSize.width, gameSize.height, this.groundY);
+      up.root.setPosition(p.upX, p.y);
+      down.root.setPosition(p.downX, p.y);
+      hit.root.setPosition(p.hitX, p.y);
+    };
+    this.scale.on("resize", layout);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.scale.off("resize", layout);
+    });
   }
 
   update(_t: number, delta: number) {
@@ -762,19 +810,20 @@ export class BossBattleScene extends Phaser.Scene {
   private showEnd(won: boolean) {
     if (this.ended) return;
     this.ended = true;
-    this.statusText.setText(won ? "Победа!" : "Поражение");
+    this.statusText.setText("");
     const { width, height } = this.scale;
+    const cy = height * 0.34;
     const panel = this.add.graphics().setDepth(60);
     panel.fillStyle(0xf4f1e8, 0.94);
     panel.fillRoundedRect(
       width / 2 - px(150),
-      height * 0.36 - px(70),
+      cy - px(80),
       px(300),
-      px(200),
+      px(220),
       px(16),
     );
     this.add
-      .text(width / 2, height * 0.36 - px(30), won ? "Победа!" : "Поражение", {
+      .text(width / 2, cy - px(40), won ? "Победа!" : "Поражение", {
         fontFamily: "Georgia, 'Times New Roman', serif",
         fontSize: fontPx(28),
         color: NOTEBOOK_INK,
@@ -785,7 +834,7 @@ export class BossBattleScene extends Phaser.Scene {
     addPenTextButton(
       this,
       width / 2,
-      height * 0.36 + 35,
+      cy + px(30),
       "Ещё раз",
       () => this.scene.restart({ bossId: this.bossId }),
       { depth: 61 },
@@ -793,7 +842,7 @@ export class BossBattleScene extends Phaser.Scene {
     addPenTextButton(
       this,
       width / 2,
-      height * 0.36 + 90,
+      cy + px(90),
       "К боссам",
       () => this.scene.start("boss-select"),
       { depth: 61 },
