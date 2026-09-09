@@ -705,7 +705,7 @@ export class PlayScene extends Phaser.Scene {
         spin: 0,
         phase: 0,
         amp: 0,
-        freq: 90 * DPR + this.rng() * 50 * DPR, // extra approach speed
+        freq: 200 * DPR + this.rng() * 80 * DPR, // extra approach speed
         arm: 0,
       });
       // No key — the choice is jump / duck, not a pickup
