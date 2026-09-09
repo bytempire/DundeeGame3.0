@@ -7,7 +7,7 @@ import {
 } from "../ui/notebookBg";
 import { addPenTextButton } from "../ui/penControls";
 import { isClientAdmin } from "./AdminScene";
-import { DPR, fontPx } from "../ui/dpr";
+import { fontPx } from "../ui/dpr";
 
 type MeResponse = {
   coinBalance: number;
@@ -42,16 +42,8 @@ export class MenuScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    // Hero stick-trick preview on the menu
-    this.add
-      .sprite(width / 2, height * 0.4, "crocodile-trick")
-      .setOrigin(0.5, 0.9375)
-      .setScale(0.52 * DPR)
-      .setDepth(5)
-      .play("stick_trick");
-
     this.statusText = this.add
-      .text(width / 2, height * 0.46, "Загрузка…", {
+      .text(width / 2, height * 0.2, "Загрузка…", {
         fontFamily: "Georgia, 'Times New Roman', serif",
         fontSize: fontPx(14),
         color: NOTEBOOK_MUTED,
@@ -60,31 +52,38 @@ export class MenuScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    addPenTextButton(this, width / 2, height * 0.54, "Играть", () => {
+    addPenTextButton(this, width / 2, height * 0.32, "Играть", () => {
       this.scene.start("play");
     });
 
-    addPenTextButton(this, width / 2, height * 0.63, "Босс-битвы", () => {
+    addPenTextButton(this, width / 2, height * 0.42, "Босс-битвы", () => {
       this.scene.start("boss-select");
     });
 
-    addPenTextButton(this, width / 2, height * 0.72, "Рекорды", () => {
+    addPenTextButton(this, width / 2, height * 0.52, "Рекорды", () => {
       this.scene.start("leaderboard");
     });
 
-    addPenTextButton(this, width / 2, height * 0.81, "Магазин VPN", () => {
+    addPenTextButton(this, width / 2, height * 0.62, "Магазин VPN", () => {
       void this.openShop();
     });
 
-    addPenTextButton(this, width / 2, height * 0.9, "Открыть VPN-бот", () => {
+    addPenTextButton(this, width / 2, height * 0.72, "Открыть VPN-бот", () => {
       const url = this.me?.vpnBotUrl ?? "https://t.me/VpnDundeeBot";
       getWebApp()?.openTelegramLink?.(url) ?? window.open(url, "_blank");
     });
 
     if (isClientAdmin()) {
-      addPenTextButton(this, width / 2, height * 0.97, "Админ", () => {
-        this.scene.start("admin");
-      }, { height: 36, fontSize: "15px" });
+      addPenTextButton(
+        this,
+        width / 2,
+        height * 0.82,
+        "Админ",
+        () => {
+          this.scene.start("admin");
+        },
+        { height: 36, fontSize: "15px" },
+      );
     }
 
     void this.refreshMe();
