@@ -73,10 +73,6 @@ export class BossSelectScene extends Phaser.Scene {
   }
 
   private openBattle(bossId: BossId) {
-    if (bossId === "bear") {
-      this.scene.start("boss-intro", { bossId });
-    } else {
-      this.scene.start("boss-battle", { bossId });
-    }
+    this.scene.start("boss-intro", { bossId });
   }
 }

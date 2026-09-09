@@ -1,0 +1,88 @@
+{
+  "version": 2,
+  "assetType": "stationary-stick-trick",
+  "frameWidth": 384,
+  "frameHeight": 384,
+  "columns": 4,
+  "rows": 2,
+  "frameCount": 8,
+  "frameRate": 8,
+  "loop": true,
+  "puckIncluded": true,
+  "anchor": {
+    "x": 176,
+    "y": 340
+  },
+  "bosses": [
+    {
+      "id": "bear",
+      "nameRu": "Медведь",
+      "trickRu": "Перекладывание шайбы с клюшки в ловушку и обратно",
+      "image": "bear/trick.png",
+      "atlas": "bear/trick.json",
+      "framesDirectory": "bear/frames",
+      "animation": {
+        "start": 0,
+        "end": 7,
+        "frameRate": 8,
+        "repeat": -1
+      }
+    },
+    {
+      "id": "shark",
+      "nameRu": "Акула",
+      "trickRu": "Восьмёрка шайбой перед собой",
+      "image": "shark/trick.png",
+      "atlas": "shark/trick.json",
+      "framesDirectory": "shark/frames",
+      "animation": {
+        "start": 0,
+        "end": 7,
+        "frameRate": 8,
+        "repeat": -1
+      }
+    },
+    {
+      "id": "boar",
+      "nameRu": "Кабан",
+      "trickRu": "Балансировка шайбы на ребре",
+      "image": "boar/trick.png",
+      "atlas": "boar/trick.json",
+      "framesDirectory": "boar/frames",
+      "animation": {
+        "start": 0,
+        "end": 7,
+        "frameRate": 8,
+        "repeat": -1
+      }
+    },
+    {
+      "id": "octopus",
+      "nameRu": "Осьминог",
+      "trickRu": "Перекладывание шайбы между двумя клюшками",
+      "image": "octopus/trick.png",
+      "atlas": "octopus/trick.json",
+      "framesDirectory": "octopus/frames",
+      "animation": {
+        "start": 0,
+        "end": 7,
+        "frameRate": 8,
+        "repeat": -1
+      }
+    },
+    {
+      "id": "robot",
+      "nameRu": "Робот",
+      "trickRu": "Обвод клюшкой неподвижной шайбы",
+      "image": "robot/trick.png",
+      "atlas": "robot/trick.json",
+      "framesDirectory": "robot/frames",
+      "animation": {
+        "start": 0,
+        "end": 7,
+        "frameRate": 8,
+        "repeat": -1
+      }
+    }
+  ]
+}
