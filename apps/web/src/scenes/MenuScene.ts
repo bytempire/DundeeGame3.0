@@ -44,7 +44,7 @@ export class MenuScene extends Phaser.Scene {
     // Hero preview on the menu (feet-anchored)
     this.add
       .sprite(width / 2, height * 0.4, "crocodile")
-      .setOrigin(0.5, 0.9375)
+      .setOrigin(0.5, 1)
       .setScale(0.52)
       .setDepth(5)
       .play("idle");

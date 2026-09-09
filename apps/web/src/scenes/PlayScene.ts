@@ -59,14 +59,15 @@ const PLAYER_SCALE = 0.17;
 const JUMP_VELOCITY = -560;
 const COYOTE_MS = 100;
 const JUMP_BUFFER_MS = 120;
-const BODY_W = 120;
-const BODY_H = 192;
-const BODY_OX = 132;
-const BODY_OY = 180;
-const DUCK_W = 240;
-const DUCK_H = 84;
-const DUCK_OX = 72;
-const DUCK_OY = 288;
+/** Hitbox near the skates (source px, 384 frame) */
+const BODY_W = 110;
+const BODY_H = 150;
+const BODY_OX = Math.round((FRAME - BODY_W) / 2);
+const BODY_OY = FRAME - BODY_H - 6;
+const DUCK_W = 200;
+const DUCK_H = 70;
+const DUCK_OX = Math.round((FRAME - DUCK_W) / 2);
+const DUCK_OY = FRAME - DUCK_H - 6;
 const BASE_SPEED = 280;
 const SPEED_GAIN = 8;
 /** One platform tile width in px = 1 meter of run distance */
@@ -179,17 +180,16 @@ export class PlayScene extends Phaser.Scene {
     });
 
     // Origin at feet so y = groundY sits on the path
-    this.player = this.physics.add.sprite(width * 0.22, this.groundY + 2, "crocodile");
-    // Pack anchor (feet slightly above frame bottom)
-    this.player.setOrigin(0.5, 0.9375);
+    this.player = this.physics.add.sprite(width * 0.22, this.groundY, "crocodile");
+    this.player.setOrigin(0.5, 1);
     this.player.setScale(PLAYER_SCALE);
     this.player.setCollideWorldBounds(false);
     this.player.setDepth(10);
     const body = this.player.body as Phaser.Physics.Arcade.Body;
-    // Hitbox in source pixels (320×320 frame), near the shoes
     body.setSize(BODY_W, BODY_H);
     body.setOffset(BODY_OX, BODY_OY);
     body.setMaxVelocity(600, 1200);
+    body.setAllowGravity(true);
     this.player.setBounce(0);
     this.player.play("run");
 
@@ -902,7 +902,7 @@ export class PlayScene extends Phaser.Scene {
     this.obstacleIdx = 0;
     this.spikes5Count = 0;
     this.setDuck(false);
-    this.player.setPosition(this.scale.width * 0.22, this.groundY + 2);
+    this.player.setPosition(this.scale.width * 0.22, this.groundY);
     const body = this.player.body as Phaser.Physics.Arcade.Body;
     body.setVelocity(0, 0);
     this.jumping = false;
