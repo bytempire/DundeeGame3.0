@@ -498,7 +498,11 @@ export class PlayScene extends Phaser.Scene {
     if (this.player.y > this.scale.height + px(80)) this.onHit();
 
     this.hud.setText(
-      `Дистанция: ${Math.floor(this.distance)} м\nКлючи: ${this.pickupCoins}\nПопытки: ${this.freeLeft()}` +
+      `Дистанция: ${Math.floor(this.distance)} м` +
+        (!this.bossEncounterDone
+          ? `\nДо босса: ${Math.max(0, Math.ceil(STORY_BOSS_AT_M - this.distance))} м`
+          : "") +
+        `\nКлючи: ${this.pickupCoins}\nПопытки: ${this.freeLeft()}` +
         (this.extraRevives > 0 ? ` + ${this.extraRevives}` : ""),
     );
   }

@@ -669,7 +669,14 @@ export class BossBattleScene extends Phaser.Scene {
   }
 
   private updatePucks(dt: number) {
+    if (this.heroDead || this.bossDead || this.ended) {
+      this.clearPucks();
+      return;
+    }
+
     const keep: Puck[] = [];
+    const hits: { p: Puck; dist: number }[] = [];
+
     for (const p of this.pucks) {
       p.prevX = p.sprite.x;
       p.prevY = p.sprite.y;
@@ -686,18 +693,31 @@ export class BossBattleScene extends Phaser.Scene {
         continue;
       }
 
-      if (p.fromHero) {
-        if (!this.bossDead && this.hitBoss(p)) {
-          this.onBossHit(p.sprite.x, p.sprite.y);
-          p.sprite.destroy();
-          continue;
-        }
-      } else if (!this.heroDead && this.hitHero(p)) {
-        this.onHeroHit(p.sprite.x, p.sprite.y);
+      if (p.fromHero && this.hitBoss(p)) {
+        // Closer to target = earlier contact this frame
+        hits.push({ p, dist: Math.abs(p.sprite.x - this.boss.x) });
+      } else if (!p.fromHero && this.hitHero(p)) {
+        hits.push({ p, dist: Math.abs(p.sprite.x - this.hero.x) });
+      } else {
+        keep.push(p);
+      }
+    }
+
+    // Resolve earliest hit first — first lethal puck wins, rest can't kill
+    hits.sort((a, b) => a.dist - b.dist);
+    for (const { p } of hits) {
+      if (this.heroDead || this.bossDead || this.ended) {
         p.sprite.destroy();
         continue;
       }
-      keep.push(p);
+      if (p.fromHero) this.onBossHit(p.sprite.x, p.sprite.y);
+      else this.onHeroHit(p.sprite.x, p.sprite.y);
+      p.sprite.destroy();
+    }
+
+    if (this.heroDead || this.bossDead || this.ended) {
+      this.clearPucks();
+      return;
     }
     this.pucks = keep;
   }
@@ -797,6 +817,8 @@ export class BossBattleScene extends Phaser.Scene {
   }
 
   private onHeroHit(x: number, y: number) {
+    // Opponent already down — in-flight pucks can't finish a mutual kill
+    if (this.heroDead || this.bossDead || this.ended) return;
     this.playFx(x, y, FX.impact);
     this.heroHp -= this.cfg.boss.damage;
     this.heroInvuln = this.cfg.hero.invulnerabilityMs;
@@ -825,6 +847,7 @@ export class BossBattleScene extends Phaser.Scene {
   }
 
   private onBossHit(x: number, y: number) {
+    if (this.heroDead || this.bossDead || this.ended) return;
     this.playFx(x, y, FX.impact);
     const inOverheat = this.time.now < this.robotOverheatUntil;
     const armored =
@@ -876,6 +899,7 @@ export class BossBattleScene extends Phaser.Scene {
   }
 
   private killHero() {
+    if (this.heroDead || this.bossDead || this.ended) return;
     this.heroDead = true;
     this.heroBusy = true;
     this.clearPucks();
@@ -887,6 +911,7 @@ export class BossBattleScene extends Phaser.Scene {
   }
 
   private killBoss() {
+    if (this.heroDead || this.bossDead || this.ended) return;
     this.bossDead = true;
     this.bossBusy = true;
     this.clearPucks();
