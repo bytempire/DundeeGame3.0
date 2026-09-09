@@ -682,34 +682,52 @@ export class BossBattleScene extends Phaser.Scene {
   private onBossHit(x: number, y: number) {
     this.playFx(x, y, FX.impact);
     const inOverheat = this.time.now < this.robotOverheatUntil;
-    // Robot: damage only while overheated; otherwise sparks only
-    if (
+    const armored =
       this.bossId === "robot" &&
-      this.cfg.robot?.onlyTakesDamageWhileOverheated &&
-      !inOverheat
-    ) {
+      !!this.cfg.robot?.onlyTakesDamageWhileOverheated &&
+      !inOverheat;
+
+    if (armored) {
+      // Sparks + flinch, no HP while shield is up
       this.playFx(x, y, FX.damage);
+      this.playBossHurt();
       return;
     }
+
     this.bossHp -= this.cfg.hero.damage;
     if (this.bossHp <= 0) {
       this.bossHp = 0;
       this.killBoss();
       return;
     }
-    if (this.cfg.boss.interruptAttackOnHurt) {
-      this.bossBusy = false;
-      this.boss.off("animationupdate");
-      this.laneMarker.clear();
-      this.nextBossAt = this.time.now + this.cfg.boss.attackCooldownMs * 0.6;
+    this.playFx(x, y + 10, FX.damage);
+    this.playBossHurt();
+  }
+
+  /** Interrupt current boss anim cleanly and play hurt → idle. */
+  private playBossHurt() {
+    this.boss.off("animationupdate");
+    this.boss.removeAllListeners("animationcomplete");
+    this.laneMarker.clear();
+    if (
+      this.cfg.boss.interruptAttackOnHurt ||
+      this.bossId === "robot" ||
+      this.nextBossAt === Number.POSITIVE_INFINITY
+    ) {
+      const delay =
+        this.bossId === "robot" ? 500 : this.cfg.boss.attackCooldownMs * 0.6;
+      this.nextBossAt = this.time.now + delay;
     }
     this.bossBusy = true;
+    this.boss.anims.stop();
     this.boss.play("bb-boss-hurt");
-    this.playFx(x, y + 10, FX.damage);
-    this.boss.once("animationcomplete", () => {
-      this.bossBusy = false;
-      if (!this.bossDead) this.boss.play("bb-boss-idle", true);
-    });
+    this.boss.once(
+      Phaser.Animations.Events.ANIMATION_COMPLETE_KEY + "bb-boss-hurt",
+      () => {
+        this.bossBusy = false;
+        if (!this.bossDead) this.boss.play("bb-boss-idle", true);
+      },
+    );
   }
 
   private killHero() {
