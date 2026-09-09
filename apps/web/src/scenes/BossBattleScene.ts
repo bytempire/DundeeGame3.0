@@ -6,6 +6,13 @@ import {
   isBossId,
 } from "../boss/bossDefs";
 import {
+  BB_FX_KEY,
+  BB_HERO_KEY,
+  bossConfigKey,
+  bossTextureKey,
+  queueBossBattleAssets,
+} from "../boss/bossAssets";
+import {
   addNotebookBackground,
   NOTEBOOK_INK,
   NOTEBOOK_MUTED,
@@ -26,9 +33,8 @@ type Puck = {
   prevY: number;
 };
 
-const HERO_KEY = "bb-hero";
-const FX_KEY = "bb-fx";
-const BOSS_KEY = "bb-boss";
+const HERO_KEY = BB_HERO_KEY;
+const FX_KEY = BB_FX_KEY;
 
 /** Frame indices for 384×384 hero sheet (row-major). */
 const HF = {
@@ -137,36 +143,13 @@ export class BossBattleScene extends Phaser.Scene {
   }
 
   preload() {
-    const base = `${import.meta.env.BASE_URL}assets/boss-battles`;
-    if (!this.textures.exists(HERO_KEY)) {
-      this.load.spritesheet(HERO_KEY, `${base}/shared/hero/spritesheet.png`, {
-        frameWidth: 384,
-        frameHeight: 384,
-      });
-    }
-    if (!this.textures.exists(FX_KEY)) {
-      this.load.spritesheet(FX_KEY, `${base}/shared/fx/spritesheet.png`, {
-        frameWidth: 128,
-        frameHeight: 128,
-      });
-    }
-    // Always (re)load boss sheet for current id
-    if (this.textures.exists(BOSS_KEY)) {
-      this.textures.remove(BOSS_KEY);
-    }
-    this.load.spritesheet(BOSS_KEY, `${base}/${this.bossId}/spritesheet.png`, {
-      frameWidth: 512,
-      frameHeight: 512,
-    });
-    this.load.json(
-      `bb-cfg-${this.bossId}`,
-      `${base}/${this.bossId}/battle.json?v=atk2`,
-    );
+    // Usually already cached from BootScene — only fetch what's missing
+    queueBossBattleAssets(this);
   }
 
   create() {
     addNotebookBackground(this);
-    this.cfg = this.cache.json.get(`bb-cfg-${this.bossId}`) as BattleConfig;
+    this.cfg = this.cache.json.get(bossConfigKey(this.bossId)) as BattleConfig;
     this.ensureAnims();
 
     const { width, height } = this.scale;
@@ -206,8 +189,9 @@ export class BossBattleScene extends Phaser.Scene {
       .setDepth(10);
     this.hero.play("bb-hero-idle");
 
+    const bossKey = bossTextureKey(this.bossId);
     this.boss = this.add
-      .sprite(this.bossX, this.groundY, BOSS_KEY, BF.idle[0])
+      .sprite(this.bossX, this.groundY, bossKey, BF.idle[0])
       .setOrigin(0.5, 0.9375)
       .setScale(this.spriteScale)
       .setFlipX(true)
@@ -373,10 +357,11 @@ export class BossBattleScene extends Phaser.Scene {
     mk("bb-hero-hurt", HERO_KEY, HF.hurt, 120, 0);
     mk("bb-hero-death", HERO_KEY, HF.death, 180, 0);
     mk("bb-hero-crouch", HERO_KEY, HF.crouch, 90, 0);
-    mk("bb-boss-idle", BOSS_KEY, BF.idle, 200, -1);
-    mk("bb-boss-attack", BOSS_KEY, BF.attack, 120, 0);
-    mk("bb-boss-hurt", BOSS_KEY, BF.hurt, 120, 0);
-    mk("bb-boss-death", BOSS_KEY, BF.death, 180, 0);
+    const bossKey = bossTextureKey(this.bossId);
+    mk("bb-boss-idle", bossKey, BF.idle, 200, -1);
+    mk("bb-boss-attack", bossKey, BF.attack, 120, 0);
+    mk("bb-boss-hurt", bossKey, BF.hurt, 120, 0);
+    mk("bb-boss-death", bossKey, BF.death, 180, 0);
   }
 
   private refreshHud() {

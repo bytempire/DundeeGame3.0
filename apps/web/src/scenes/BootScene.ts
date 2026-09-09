@@ -6,6 +6,13 @@ import {
   NOTEBOOK_MUTED,
 } from "../ui/notebookBg";
 import { DPR, fontPx, px } from "../ui/dpr";
+import {
+  BB_FX_KEY,
+  BB_HERO_KEY,
+  bossTextureKey,
+  queueBossBattleAssets,
+} from "../boss/bossAssets";
+import { BOSSES } from "../boss/bossDefs";
 
 /** Splash stays on screen this long so the load screen is always visible. */
 const BOOT_MIN_MS = 5000;
@@ -111,7 +118,7 @@ export class BootScene extends Phaser.Scene {
     this.loadRest();
   }
 
-  /** Phase 2 — remaining assets in the background while the bar animates. */
+  /** Phase 2 — runner + all boss-battle assets while the bar animates. */
   private loadRest() {
     const base = import.meta.env.BASE_URL;
 
@@ -131,6 +138,7 @@ export class BootScene extends Phaser.Scene {
     this.load.image("spikes", `${base}assets/spike_trap.png`);
     this.load.image("spikes5", `${base}assets/spikes_5.png`);
     this.load.image("pendulum", `${base}assets/pendulum.png`);
+    queueBossBattleAssets(this);
 
     this.load.once("complete", () => {
       this.assetsReady = true;
@@ -151,6 +159,19 @@ export class BootScene extends Phaser.Scene {
     this.textures
       .get("crocodile-game")
       .setFilter(Phaser.Textures.FilterMode.LINEAR);
+
+    if (this.textures.exists(BB_HERO_KEY)) {
+      this.textures.get(BB_HERO_KEY).setFilter(Phaser.Textures.FilterMode.LINEAR);
+    }
+    if (this.textures.exists(BB_FX_KEY)) {
+      this.textures.get(BB_FX_KEY).setFilter(Phaser.Textures.FilterMode.LINEAR);
+    }
+    for (const boss of BOSSES) {
+      const key = bossTextureKey(boss.id);
+      if (this.textures.exists(key)) {
+        this.textures.get(key).setFilter(Phaser.Textures.FilterMode.LINEAR);
+      }
+    }
 
     if (!this.anims.exists("menu-idle")) {
       this.anims.create({
