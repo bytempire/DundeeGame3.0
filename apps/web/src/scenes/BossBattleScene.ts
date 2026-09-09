@@ -169,7 +169,7 @@ export class BossBattleScene extends Phaser.Scene {
 
     // Fight floor — same notebook platform strip as the runner
     const pathH = 24 * DPR;
-    this.groundY = height * 0.68;
+    this.groundY = height * 0.78;
     const pad = px(12);
     const heroHalf = 192 * this.spriteScale;
     const bossHalf = 256 * this.spriteScale;
@@ -178,10 +178,6 @@ export class BossBattleScene extends Phaser.Scene {
     const bodyH = 200 * this.spriteScale;
     this.lowY = this.groundY - bodyH * 0.22;
     this.highY = this.groundY - bodyH * 0.7;
-
-    const ice = this.add.graphics().setDepth(1);
-    ice.fillStyle(0xd7e8f5, 0.9);
-    ice.fillRect(0, this.groundY - px(4), width, height - this.groundY + px(4));
 
     this.path = this.add
       .tileSprite(width / 2, this.groundY + pathH / 2, width + 4, pathH, "platform")
@@ -275,7 +271,7 @@ export class BossBattleScene extends Phaser.Scene {
     const { width, height } = this.scale;
     // Buttons sit on the strip below the path — a bit lower than mid-gap
     const place = (w: number, h: number, gy: number) => {
-      const y = gy + pathH + (h - gy - pathH) * 0.62;
+      const y = gy + pathH + (h - gy - pathH) * 0.72;
       return {
         upX: w * 0.18,
         downX: w * 0.38,
@@ -302,7 +298,7 @@ export class BossBattleScene extends Phaser.Scene {
     down.hit.on("pointerupoutside", () => this.setDuck(false));
 
     const layout = (gameSize: Phaser.Structs.Size) => {
-      this.groundY = gameSize.height * 0.68;
+      this.groundY = gameSize.height * 0.78;
       const pad = px(12);
       this.heroX = pad + 192 * this.spriteScale;
       this.bossX = gameSize.width - pad - 256 * this.spriteScale;
