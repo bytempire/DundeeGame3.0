@@ -655,8 +655,8 @@ export class PlayScene extends Phaser.Scene {
     }
 
     if (kind === "spikes5") {
-      // Wider 5-spike strip (296×68) — scale down to a jumpable width
-      const scale = (0.42 + this.rng() * 0.08) * DPR;
+      // Wider 5-spike strip (296×68) — keep jumpable (a bit smaller than before)
+      const scale = (0.34 + this.rng() * 0.06) * DPR;
       const hw = 296 * scale * 0.45;
       const hh = 68 * scale * 0.42;
       const go = this.add
