@@ -75,6 +75,8 @@ type Pickup = {
   go: Phaser.GameObjects.Image;
   r: number;
   taken: boolean;
+  /** Bait before wide spikes — must jump; standing run-under doesn't count */
+  bait?: boolean;
 };
 
 const GROUND_Y_RATIO = 0.82;
@@ -539,7 +541,15 @@ export class PlayScene extends Phaser.Scene {
         o.phase += (o.freq * delta) / 1000;
         o.go.setAngle(Math.sin(o.phase) * o.amp);
       }
-      if (o.go.x < -120) {
+      // Despawn only once fully past the left edge (HiDPI sprites are wide)
+      const leftExtent = Math.max(
+        o.go.displayWidth * 0.55,
+        o.hw * 2,
+        o.arm + o.r,
+        o.r * 2,
+        px(40),
+      );
+      if (o.go.x < -leftExtent) {
         o.go.destroy();
         this.obstacles.splice(i, 1);
       }
@@ -547,7 +557,7 @@ export class PlayScene extends Phaser.Scene {
     for (let i = this.coins.length - 1; i >= 0; i--) {
       const c = this.coins[i]!;
       c.go.x -= dx;
-      if (c.go.x < -60) {
+      if (c.go.x < -(c.go.displayWidth + px(24))) {
         c.go.destroy();
         this.coins.splice(i, 1);
       }
@@ -556,7 +566,6 @@ export class PlayScene extends Phaser.Scene {
 
   private spawnObstacle() {
     const { width } = this.scale;
-    const x = width + px(80);
     const kind = OBSTACLE_CYCLE[this.obstacleIdx % OBSTACLE_CYCLE.length]!;
     this.obstacleIdx += 1;
 
@@ -564,7 +573,9 @@ export class PlayScene extends Phaser.Scene {
       const scale = (0.55 + this.rng() * 0.35) * DPR;
       const r = 96 * scale * 0.42;
       const y = this.groundY - r - px(2);
-      const go = this.add.image(x, y, "saw").setScale(scale).setDepth(5);
+      const go = this.add.image(0, y, "saw").setScale(scale).setDepth(5);
+      const x = width + go.displayWidth * 0.5 + px(8);
+      go.setX(x);
       const spin = 180 + this.rng() * 220;
       this.obstacles.push({
         go,
@@ -587,10 +598,12 @@ export class PlayScene extends Phaser.Scene {
       const hw = 96 * scale * 0.45;
       const hh = 36 * scale * 0.45;
       const go = this.add
-        .image(x, this.groundY + px(2), "spikes")
+        .image(0, this.groundY + px(2), "spikes")
         .setOrigin(0.5, 1)
         .setScale(scale)
         .setDepth(5);
+      const x = width + go.displayWidth * 0.5 + px(8);
+      go.setX(x);
       this.obstacles.push({
         go,
         kind: "spikes",
@@ -613,10 +626,12 @@ export class PlayScene extends Phaser.Scene {
       const hw = 296 * scale * 0.45;
       const hh = 68 * scale * 0.42;
       const go = this.add
-        .image(x, this.groundY + px(2), "spikes5")
+        .image(0, this.groundY + px(2), "spikes5")
         .setOrigin(0.5, 1)
         .setScale(scale)
         .setDepth(5);
+      const x = width + go.displayWidth * 0.5 + px(8);
+      go.setX(x);
       this.obstacles.push({
         go,
         kind: "spikes5",
@@ -640,10 +655,12 @@ export class PlayScene extends Phaser.Scene {
     // Ball bottom high enough that a lying hitbox fits under it
     const pivotY = this.groundY - arm - r - px(26);
     const go = this.add
-      .image(x, pivotY, "pendulum")
+      .image(0, pivotY, "pendulum")
       .setOrigin(0.5, 0)
       .setScale(scale)
       .setDepth(5);
+    const x = width + go.displayWidth * 0.5 + px(8);
+    go.setX(x);
     this.obstacles.push({
       go,
       kind: "pendulum",
@@ -668,12 +685,12 @@ export class PlayScene extends Phaser.Scene {
     };
   }
 
-  private spawnKeyAt(x: number, y: number) {
+  private spawnKeyAt(x: number, y: number, bait = false) {
     const go = this.add
       .image(x, y, "pickup-key")
       .setDepth(6)
       .setScale((0.95 + this.rng() * 0.15) * DPR);
-    this.coins.push({ go, r: px(16), taken: false });
+    this.coins.push({ go, r: px(16), taken: false, bait });
   }
 
   /**
@@ -694,7 +711,11 @@ export class PlayScene extends Phaser.Scene {
     if (kind === "spikes5") {
       this.spikes5Count += 1;
       if (this.spikes5Count % BAIT_EVERY_SPIKES5 === 0) {
-        this.spawnKeyAt(trapX - BAIT_LEAD_PX, this.groundY - KEY_JUMP_OFF);
+        this.spawnKeyAt(
+          trapX - BAIT_LEAD_PX,
+          this.groundY - KEY_JUMP_OFF,
+          true,
+        );
         return;
       }
     }
@@ -736,6 +757,8 @@ export class PlayScene extends Phaser.Scene {
     const pb = this.playerBounds();
     const collect = this.playerCollectBounds();
     const hazard = this.playerHazardBounds();
+    const body = this.player.body as Phaser.Physics.Arcade.Body;
+    const grounded = body.blocked.down || body.touching.down;
 
     for (const o of this.obstacles) {
       let hit = false;
@@ -780,6 +803,8 @@ export class PlayScene extends Phaser.Scene {
 
     for (const c of this.coins) {
       if (c.taken) continue;
+      // Bait sits before the spikes with no hazard under it — must jump
+      if (c.bait && grounded) continue;
       const keyBox = new Phaser.Geom.Rectangle(
         c.go.x - c.r,
         c.go.y - c.r,
