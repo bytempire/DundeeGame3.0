@@ -54,8 +54,8 @@ type Pickup = {
 const GROUND_Y_RATIO = 0.82;
 /** Frame size of in-game crocodile sheet (pre-scaled) */
 const FRAME = 96;
-/** Drawn at native sheet size for sharp pixels */
-const PLAYER_SCALE = 1;
+/** Slightly under the tall saw visually */
+const PLAYER_SCALE = 0.72;
 const JUMP_VELOCITY = -560;
 const COYOTE_MS = 100;
 const JUMP_BUFFER_MS = 120;
