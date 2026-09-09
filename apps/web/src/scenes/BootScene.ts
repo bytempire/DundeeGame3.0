@@ -14,11 +14,11 @@ export class BootScene extends Phaser.Scene {
       `${base}assets/crocodile-hero/crocodile-hockey-clean.png`,
       { frameWidth: 384, frameHeight: 384 },
     );
-    // Pre-downscaled for gameplay (avoids blurry runtime shrink)
+    // Baked to on-screen size (1:1) for sharp edges
     this.load.spritesheet(
       "crocodile-game",
-      `${base}assets/crocodile-hero/crocodile-hockey-game.png`,
-      { frameWidth: 96, frameHeight: 96 },
+      `${base}assets/crocodile-hero/crocodile-hockey-game-v2.png`,
+      { frameWidth: 80, frameHeight: 80 },
     );
     this.load.spritesheet(
       "crocodile-trick",

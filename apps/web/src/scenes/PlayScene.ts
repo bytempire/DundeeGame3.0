@@ -52,20 +52,20 @@ type Pickup = {
 };
 
 const GROUND_Y_RATIO = 0.82;
-/** Frame size of in-game crocodile sheet (pre-scaled) */
-const FRAME = 96;
-/** Slightly under the tall saw visually */
-const PLAYER_SCALE = 0.72;
+/** Frame size of in-game crocodile sheet (baked to display size) */
+const FRAME = 80;
+/** 1:1 with baked sheet — no runtime shrink blur */
+const PLAYER_SCALE = 1;
 const JUMP_VELOCITY = -560;
 const COYOTE_MS = 100;
 const JUMP_BUFFER_MS = 120;
-/** Hitbox near the skates (source px, 96 frame) */
-const BODY_W = 28;
-const BODY_H = 38;
+/** Hitbox near the skates (source px on 80 frame) */
+const BODY_W = 24;
+const BODY_H = 32;
 const BODY_OX = Math.round((FRAME - BODY_W) / 2);
 const BODY_OY = FRAME - BODY_H - 2;
-const DUCK_W = 50;
-const DUCK_H = 18;
+const DUCK_W = 42;
+const DUCK_H = 15;
 const DUCK_OX = Math.round((FRAME - DUCK_W) / 2);
 const DUCK_OY = FRAME - DUCK_H - 2;
 const BASE_SPEED = 280;
