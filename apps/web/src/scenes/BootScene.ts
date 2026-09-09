@@ -16,6 +16,10 @@ export class BootScene extends Phaser.Scene {
   private status!: Phaser.GameObjects.Text;
   private assetsReady = false;
   private splashDone = false;
+  private bootStartedAt = 0;
+  private loadP = 0;
+  private shownP = 0;
+  private finished = false;
 
   constructor() {
     super("boot");
@@ -36,6 +40,10 @@ export class BootScene extends Phaser.Scene {
     addNotebookBackground(this);
     this.assetsReady = false;
     this.splashDone = false;
+    this.finished = false;
+    this.loadP = 0;
+    this.shownP = 0;
+    this.bootStartedAt = this.time.now;
 
     this.textures
       .get("crocodile-trick")
@@ -97,13 +105,29 @@ export class BootScene extends Phaser.Scene {
       .rectangle(width / 2 - this.barWidth / 2, barY, 1, barH, ink, 0.9)
       .setOrigin(0, 0.5);
 
-    // Hold splash so the hero trick can play, even when assets are cached
     this.time.delayedCall(BOOT_MIN_MS, () => {
       this.splashDone = true;
       this.tryEnterMenu();
     });
 
     this.loadRunner();
+  }
+
+  update() {
+    if (this.finished) return;
+    const timeP = Phaser.Math.Clamp(
+      (this.time.now - this.bootStartedAt) / BOOT_MIN_MS,
+      0,
+      1,
+    );
+    // Cached assets finish instantly — still ease the bar over the splash window.
+    // Slow networks: never claim 100% until files are in and the min time passed.
+    const target = this.assetsReady
+      ? timeP
+      : Math.min(this.loadP, timeP, 0.97);
+    this.shownP = Math.max(this.shownP, target);
+    this.barFill.width = Math.max(1, this.barWidth * this.shownP);
+    this.status.setText(`Загрузка… ${Math.round(this.shownP * 100)}%`);
   }
 
   /** Phase 2 — only what menu + run need. Boss packs warm in the background later. */
@@ -123,14 +147,11 @@ export class BootScene extends Phaser.Scene {
     this.load.image("pendulum", `${base}assets/pendulum.png`);
 
     this.load.on("progress", (value: number) => {
-      const v = Math.max(0, Math.min(1, value));
-      this.barFill.width = Math.max(1, this.barWidth * v);
-      this.status.setText(`Загрузка… ${Math.round(v * 100)}%`);
+      this.loadP = Math.max(0, Math.min(1, value));
     });
 
     this.load.once("complete", () => {
-      this.barFill.width = this.barWidth;
-      this.status.setText("Загрузка… 100%");
+      this.loadP = 1;
       this.assetsReady = true;
       this.tryEnterMenu();
     });
@@ -139,11 +160,15 @@ export class BootScene extends Phaser.Scene {
   }
 
   private tryEnterMenu() {
-    if (!this.assetsReady || !this.splashDone) return;
+    if (!this.assetsReady || !this.splashDone || this.finished) return;
+    this.shownP = 1;
+    this.barFill.width = this.barWidth;
+    this.status.setText("Загрузка… 100%");
     this.finishBoot();
   }
 
   private finishBoot() {
+    this.finished = true;
     ensureKeyTexture(this);
     this.textures
       .get("crocodile-game")
