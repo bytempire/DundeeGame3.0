@@ -46,6 +46,9 @@ export function addNotebookBackground(
     .setOrigin(0, 0)
     .setScrollFactor(0)
     .setDepth(depth);
+  // Match HiDPI world so grid cells stay ~28 CSS px
+  const dpr = Math.min(window.devicePixelRatio || 1, 3);
+  paper.setTileScale(dpr, dpr);
 
   const onResize = (gameSize: Phaser.Structs.Size) => {
     paper.setSize(gameSize.width, gameSize.height);

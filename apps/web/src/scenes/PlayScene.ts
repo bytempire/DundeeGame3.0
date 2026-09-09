@@ -404,8 +404,9 @@ export class PlayScene extends Phaser.Scene {
     this.maxSpeedSeen = Math.max(this.maxSpeedSeen, this.scrollSpeed / 10);
     const dx = (this.scrollSpeed * delta) / 1000;
     this.distance += dx / METERS_PER_TILE_PX;
-    this.paper.tilePositionX += dx;
-    this.path.tilePositionX += dx;
+    // tilePosition is in source texels; path tiles are scaled by DPR
+    this.paper.tilePositionX += dx / DPR;
+    this.path.tilePositionX += dx / DPR;
 
     this.spawnAcc += delta;
 
