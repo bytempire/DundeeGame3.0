@@ -273,7 +273,7 @@ export class BossBattleScene extends Phaser.Scene {
     const place = (w: number, h: number, gy: number) => {
       const stripTop = gy + pathH;
       const y = (stripTop + h) / 2;
-      const pairGap = Math.min(w * 0.2, px(88));
+      const pairGap = Math.min(w * 0.26, px(110));
       return {
         upX: w * 0.22,
         downX: w * 0.22 + pairGap,
