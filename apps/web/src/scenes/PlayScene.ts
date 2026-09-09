@@ -950,7 +950,7 @@ export class PlayScene extends Phaser.Scene {
       .setOrigin(0.5);
     this.overlay.add([title, info]);
 
-    this.addOverlayButton(width / 2, height * 0.5, "Продолжить", () => {
+    this.addOverlayButton(width / 2, height * 0.5, "С начала", () => {
       void this.doContinue();
     });
     this.addOverlayButton(width / 2, height * 0.6, "Забрать ключи", () => {
@@ -1111,6 +1111,13 @@ export class PlayScene extends Phaser.Scene {
     this.clearWorldObjects();
     this.obstacleIdx = 0;
     this.spikes5Count = 0;
+    this.distance = 0;
+    this.scrollSpeed = BASE_SPEED;
+    this.bossesCleared = 0;
+    this.spawnAcc = 0;
+    this.coyoteMs = 0;
+    this.jumpBufferMs = 0;
+    this.registry.remove("runSnapshot");
     this.setDuck(false);
     this.player.setPosition(this.scale.width * 0.22, this.groundY);
     const body = this.player.body as Phaser.Physics.Arcade.Body;
