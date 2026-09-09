@@ -156,16 +156,15 @@ export class BossBattleScene extends Phaser.Scene {
     this.ensureAnims();
 
     const { width, height } = this.scale;
-    this.spriteScale = Math.min(0.48, (height * 0.42) / 384);
-    this.groundY = height * 0.82;
-    this.heroX = width * 0.22;
-    this.bossX = width * 0.78;
-    const refG = this.cfg.arena.groundY;
-    this.lowY =
-      this.groundY - (refG - this.cfg.arena.lowLaneY) * this.spriteScale * 1.15;
-    this.highY =
-      this.groundY -
-      (refG - this.cfg.arena.highLaneY) * this.spriteScale * 1.15;
+    // Smaller sprites + side anchors so stick reach doesn't eat the mid-ice
+    this.spriteScale = Math.min(0.34, (height * 0.32) / 384);
+    this.groundY = height * 0.78;
+    this.heroX = width * 0.12;
+    this.bossX = width * 0.88;
+    // Lanes relative to hero body so high puck hits standing torso, not flies over
+    const bodyH = 200 * this.spriteScale;
+    this.lowY = this.groundY - bodyH * 0.22;
+    this.highY = this.groundY - bodyH * 0.7;
 
     this.heroHp = this.cfg.hero.hp;
     this.bossHp = this.cfg.boss.hp;
@@ -406,17 +405,18 @@ export class BossBattleScene extends Phaser.Scene {
   private emitHeroPuck() {
     const y = this.groundY - 70 * this.spriteScale;
     const img = this.add
-      .image(this.heroX + 50 * this.spriteScale, y, FX_KEY, FX.puck_hero)
+      .image(this.heroX + 40 * this.spriteScale, y, FX_KEY, FX.puck_hero)
       .setOrigin(0.5)
-      .setScale(this.spriteScale * 0.85)
+      .setScale(this.spriteScale * 0.95)
       .setDepth(12);
+    const dist = Math.abs(this.bossX - this.heroX);
     this.pucks.push({
       sprite: img,
-      vx: 420 * this.spriteScale * 2.2,
+      vx: Math.max(380, dist * 0.9),
       vy: 0,
       fromHero: true,
       lane: "mid",
-      r: 18 * this.spriteScale,
+      r: 22 * this.spriteScale,
       prevX: img.x,
       prevY: img.y,
     });
@@ -497,18 +497,23 @@ export class BossBattleScene extends Phaser.Scene {
       FX[this.cfg.boss.projectile as keyof typeof FX] ?? FX.puck_enemy;
     const frameIdx = typeof frame === "number" ? frame : FX.puck_enemy;
     const img = this.add
-      .image(this.bossX - 55 * this.spriteScale, y, FX_KEY, frameIdx)
+      .image(this.bossX - 40 * this.spriteScale, y, FX_KEY, frameIdx)
       .setOrigin(0.5)
-      .setScale(this.spriteScale * (this.cfg.boss.projectile === "puck_heavy" ? 1.05 : 0.85))
+      .setScale(
+        this.spriteScale *
+          (this.cfg.boss.projectile === "puck_heavy" ? 1.15 : 0.95),
+      )
       .setDepth(12);
-    const speed = this.cfg.boss.projectileSpeedPxPerSec * this.spriteScale * 1.15;
+    const dist = Math.abs(this.bossX - this.heroX);
+    const base = this.cfg.boss.projectileSpeedPxPerSec;
+    const speed = Math.max(base * 0.85, dist * (base / 420));
     this.pucks.push({
       sprite: img,
       vx: -speed,
       vy: 0,
       fromHero: false,
       lane,
-      r: 20 * this.spriteScale,
+      r: 24 * this.spriteScale,
       prevX: img.x,
       prevY: img.y,
     });
@@ -550,9 +555,10 @@ export class BossBattleScene extends Phaser.Scene {
 
   private heroBody(): { x: number; y: number; w: number; h: number } {
     const s = this.spriteScale;
-    const w = 48 * s;
-    const h = this.ducking ? 42 * s : 95 * s;
-    const x = this.hero.x - w * 0.35;
+    const w = 70 * s;
+    // Standing covers chest/head (high lane); duck drops under high lane
+    const h = this.ducking ? 72 * s : 185 * s;
+    const x = this.hero.x - w * 0.4;
     const y = this.hero.y - h;
     return { x, y, w, h };
   }
@@ -591,17 +597,24 @@ export class BossBattleScene extends Phaser.Scene {
 
   private hitHero(p: Puck) {
     if (this.heroInvuln > 0) return false;
-    const body = this.heroBody();
-    // High puck misses duck; low puck misses jump feet-clear
+    // High puck clears ducked head; low puck clears jumped feet
     if (p.lane === "high" && this.ducking) return false;
-    if (p.lane === "low" && this.jumping && this.heroAirY < -40 * this.spriteScale)
+    if (
+      p.lane === "low" &&
+      this.jumping &&
+      this.heroAirY < -55 * this.spriteScale
+    ) {
       return false;
+    }
+    const body = this.heroBody();
+    // Slightly larger puck radius for fair mid-lane contact
+    const r = p.r * 1.25;
     return this.segmentHitsRect(
       p.prevX,
       p.prevY,
       p.sprite.x,
       p.sprite.y,
-      p.r,
+      r,
       body,
     );
   }
