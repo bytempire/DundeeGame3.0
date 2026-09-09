@@ -20,6 +20,11 @@ export class BootScene extends Phaser.Scene {
       `${base}assets/crocodile-hero/crocodile-hockey-game.png`,
       { frameWidth: 96, frameHeight: 96 },
     );
+    this.load.spritesheet(
+      "crocodile-trick",
+      `${base}assets/crocodile-hero/crocodile-stick-trick-spritesheet.png`,
+      { frameWidth: 384, frameHeight: 384 },
+    );
     this.load.image("platform", `${base}assets/platform_static.png`);
     this.load.image("saw", `${base}assets/saw_blade.png`);
     this.load.image("spikes", `${base}assets/spike_trap.png`);
@@ -33,11 +38,29 @@ export class BootScene extends Phaser.Scene {
     this.textures
       .get("crocodile-game")
       .setFilter(Phaser.Textures.FilterMode.LINEAR);
+    this.textures
+      .get("crocodile-trick")
+      .setFilter(Phaser.Textures.FilterMode.LINEAR);
 
     this.anims.create({
       key: "menu-idle",
       frames: this.anims.generateFrameNumbers("crocodile", { start: 0, end: 3 }),
       frameRate: 5,
+      repeat: -1,
+    });
+    // Menu stick-trick loop (durations from trick-animation.json)
+    this.anims.create({
+      key: "stick_trick",
+      frames: [
+        { key: "crocodile-trick", frame: 0, duration: 240 },
+        { key: "crocodile-trick", frame: 1, duration: 140 },
+        { key: "crocodile-trick", frame: 2, duration: 140 },
+        { key: "crocodile-trick", frame: 3, duration: 140 },
+        { key: "crocodile-trick", frame: 4, duration: 180 },
+        { key: "crocodile-trick", frame: 5, duration: 240 },
+        { key: "crocodile-trick", frame: 6, duration: 180 },
+        { key: "crocodile-trick", frame: 7, duration: 280 },
+      ],
       repeat: -1,
     });
     this.anims.create({

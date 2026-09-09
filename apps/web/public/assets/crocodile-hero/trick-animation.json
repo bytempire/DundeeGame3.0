@@ -1,0 +1,90 @@
+{
+  "image": "crocodile-stick-trick-spritesheet.png",
+  "frameWidth": 384,
+  "frameHeight": 384,
+  "columns": 4,
+  "rows": 2,
+  "anchor": {
+    "x": 0.5,
+    "y": 0.9375
+  },
+  "animation": {
+    "name": "stick_trick",
+    "loop": false,
+    "totalDurationMs": 1540,
+    "frames": [
+      {
+        "name": "trick_01_ready",
+        "file": "trick_01_ready.png",
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384,
+        "durationMs": 240
+      },
+      {
+        "name": "trick_02_pull",
+        "file": "trick_02_pull.png",
+        "x": 384,
+        "y": 0,
+        "w": 384,
+        "h": 384,
+        "durationMs": 140
+      },
+      {
+        "name": "trick_03_push",
+        "file": "trick_03_push.png",
+        "x": 768,
+        "y": 0,
+        "w": 384,
+        "h": 384,
+        "durationMs": 140
+      },
+      {
+        "name": "trick_04_scoop",
+        "file": "trick_04_scoop.png",
+        "x": 1152,
+        "y": 0,
+        "w": 384,
+        "h": 384,
+        "durationMs": 140
+      },
+      {
+        "name": "trick_05_toss",
+        "file": "trick_05_toss.png",
+        "x": 0,
+        "y": 384,
+        "w": 384,
+        "h": 384,
+        "durationMs": 180
+      },
+      {
+        "name": "trick_06_air",
+        "file": "trick_06_air.png",
+        "x": 384,
+        "y": 384,
+        "w": 384,
+        "h": 384,
+        "durationMs": 240
+      },
+      {
+        "name": "trick_07_catch",
+        "file": "trick_07_catch.png",
+        "x": 768,
+        "y": 384,
+        "w": 384,
+        "h": 384,
+        "durationMs": 180
+      },
+      {
+        "name": "trick_08_return",
+        "file": "trick_08_return.png",
+        "x": 1152,
+        "y": 384,
+        "w": 384,
+        "h": 384,
+        "durationMs": 280
+      }
+    ]
+  }
+}

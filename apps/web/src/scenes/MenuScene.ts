@@ -41,13 +41,13 @@ export class MenuScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    // Hero preview on the menu (feet-anchored)
+    // Hero stick-trick preview on the menu
     this.add
-      .sprite(width / 2, height * 0.4, "crocodile")
-      .setOrigin(0.5, 1)
+      .sprite(width / 2, height * 0.4, "crocodile-trick")
+      .setOrigin(0.5, 0.9375)
       .setScale(0.52)
       .setDepth(5)
-      .play("menu-idle");
+      .play("stick_trick");
 
     this.statusText = this.add
       .text(width / 2, height * 0.46, "Загрузка…", {
