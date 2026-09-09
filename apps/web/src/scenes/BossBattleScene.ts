@@ -11,6 +11,7 @@ import {
   NOTEBOOK_MUTED,
 } from "../ui/notebookBg";
 import { addPenButton, addPenTextButton } from "../ui/penControls";
+import { DPR, fontPx, px } from "../ui/dpr";
 
 type BattleData = { bossId?: string };
 
@@ -202,7 +203,7 @@ export class BossBattleScene extends Phaser.Scene {
     this.add
       .text(width / 2, 18, this.cfg.name, {
         fontFamily: "Georgia, 'Times New Roman', serif",
-        fontSize: "20px",
+        fontSize: fontPx(20),
         color: NOTEBOOK_INK,
         fontStyle: "italic",
       })
@@ -212,7 +213,7 @@ export class BossBattleScene extends Phaser.Scene {
     this.heroHpText = this.add
       .text(16, 48, "", {
         fontFamily: "Georgia, 'Times New Roman', serif",
-        fontSize: "16px",
+        fontSize: fontPx(16),
         color: NOTEBOOK_INK,
         fontStyle: "italic",
       })
@@ -220,7 +221,7 @@ export class BossBattleScene extends Phaser.Scene {
     this.bossHpText = this.add
       .text(width - 16, 48, "", {
         fontFamily: "Georgia, 'Times New Roman', serif",
-        fontSize: "16px",
+        fontSize: fontPx(16),
         color: NOTEBOOK_INK,
         fontStyle: "italic",
       })
@@ -229,7 +230,7 @@ export class BossBattleScene extends Phaser.Scene {
     this.statusText = this.add
       .text(width / 2, 72, "", {
         fontFamily: "Georgia, 'Times New Roman', serif",
-        fontSize: "14px",
+        fontSize: fontPx(14),
         color: NOTEBOOK_MUTED,
         fontStyle: "italic",
       })
@@ -237,8 +238,8 @@ export class BossBattleScene extends Phaser.Scene {
       .setDepth(40);
     this.refreshHud();
 
-    const up = addPenButton(this, width * 0.18, height - 56, "up", 50);
-    const down = addPenButton(this, width * 0.38, height - 56, "down", 50);
+    const up = addPenButton(this, width * 0.18, height - px(56), "up", 50);
+    const down = addPenButton(this, width * 0.38, height - px(56), "down", 50);
     up.hit.on("pointerdown", () => this.tryJump());
     down.hit.on("pointerdown", () => this.setDuck(true));
     down.hit.on("pointerup", () => this.setDuck(false));
@@ -247,19 +248,19 @@ export class BossBattleScene extends Phaser.Scene {
     addPenTextButton(
       this,
       width * 0.72,
-      height - 56,
+      height - px(56),
       "Удар",
       () => this.tryAttack(),
-      { width: 110, height: 52, fontSize: "18px", depth: 50, paperFill: true },
+      { width: 110, height: 52, fontSize: 18, depth: 50, paperFill: true },
     );
 
     addPenTextButton(
       this,
-      width - 52,
-      28,
+      width - px(52),
+      px(28),
       "✕",
       () => this.scene.start("boss-select"),
-      { width: 44, height: 36, fontSize: "18px", depth: 50 },
+      { width: 44, height: 36, fontSize: 18, depth: 50 },
     );
 
     const kb = this.input.keyboard;
@@ -765,11 +766,17 @@ export class BossBattleScene extends Phaser.Scene {
     const { width, height } = this.scale;
     const panel = this.add.graphics().setDepth(60);
     panel.fillStyle(0xf4f1e8, 0.94);
-    panel.fillRoundedRect(width / 2 - 150, height * 0.36 - 70, 300, 200, 16);
+    panel.fillRoundedRect(
+      width / 2 - px(150),
+      height * 0.36 - px(70),
+      px(300),
+      px(200),
+      px(16),
+    );
     this.add
-      .text(width / 2, height * 0.36 - 30, won ? "Победа!" : "Поражение", {
+      .text(width / 2, height * 0.36 - px(30), won ? "Победа!" : "Поражение", {
         fontFamily: "Georgia, 'Times New Roman', serif",
-        fontSize: "28px",
+        fontSize: fontPx(28),
         color: NOTEBOOK_INK,
         fontStyle: "italic",
       })

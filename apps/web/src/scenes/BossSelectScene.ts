@@ -6,6 +6,7 @@ import {
   NOTEBOOK_MUTED,
 } from "../ui/notebookBg";
 import { addPenTextButton } from "../ui/penControls";
+import { DPR, fontPx, px } from "../ui/dpr";
 
 export class BossSelectScene extends Phaser.Scene {
   constructor() {
@@ -29,7 +30,7 @@ export class BossSelectScene extends Phaser.Scene {
     this.add
       .text(width / 2, height * 0.07, "Босс-битвы", {
         fontFamily: "Georgia, 'Times New Roman', serif",
-        fontSize: "30px",
+        fontSize: fontPx(30),
         color: NOTEBOOK_INK,
         fontStyle: "italic",
       })
@@ -38,7 +39,7 @@ export class BossSelectScene extends Phaser.Scene {
     this.add
       .text(width / 2, height * 0.125, "Прыгай · приседай · бей шайбой", {
         fontFamily: "Georgia, 'Times New Roman', serif",
-        fontSize: "14px",
+        fontSize: fontPx(14),
         color: NOTEBOOK_MUTED,
         fontStyle: "italic",
       })
@@ -53,7 +54,7 @@ export class BossSelectScene extends Phaser.Scene {
     }
 
     const startY = height * 0.38;
-    const gap = Math.min(52, (height * 0.48) / BOSSES.length);
+    const gap = Math.min(px(52), (height * 0.48) / BOSSES.length);
 
     BOSSES.forEach((boss, i) => {
       addPenTextButton(
@@ -62,7 +63,7 @@ export class BossSelectScene extends Phaser.Scene {
         startY + i * gap,
         boss.name,
         () => this.openBattle(boss.id),
-        { width: Math.min(300, width * 0.86), height: 42, fontSize: "17px" },
+        { width: Math.min(300, (width / DPR) * 0.86), height: 42, fontSize: 17 },
       );
     });
 

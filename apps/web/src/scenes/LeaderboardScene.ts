@@ -6,6 +6,7 @@ import {
 } from "../ui/notebookBg";
 import { addPenTextButton } from "../ui/penControls";
 import { fetchLeaderboard } from "../leaderboard";
+import { fontPx, px } from "../ui/dpr";
 
 export class LeaderboardScene extends Phaser.Scene {
   constructor() {
@@ -19,7 +20,7 @@ export class LeaderboardScene extends Phaser.Scene {
     this.add
       .text(width / 2, height * 0.1, "Рекорды", {
         fontFamily: "Georgia, 'Times New Roman', serif",
-        fontSize: "32px",
+        fontSize: fontPx(32),
         color: NOTEBOOK_INK,
         fontStyle: "italic",
       })
@@ -28,7 +29,7 @@ export class LeaderboardScene extends Phaser.Scene {
     this.add
       .text(width / 2, height * 0.17, "Топ-10 · дистанция", {
         fontFamily: "Georgia, 'Times New Roman', serif",
-        fontSize: "16px",
+        fontSize: fontPx(16),
         color: NOTEBOOK_MUTED,
         fontStyle: "italic",
       })
@@ -37,7 +38,7 @@ export class LeaderboardScene extends Phaser.Scene {
     const listText = this.add
       .text(width / 2, height * 0.26, "Загрузка…", {
         fontFamily: "Georgia, 'Times New Roman', serif",
-        fontSize: "18px",
+        fontSize: fontPx(18),
         color: NOTEBOOK_INK,
         fontStyle: "italic",
         align: "left",

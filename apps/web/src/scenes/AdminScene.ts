@@ -6,6 +6,7 @@ import {
   NOTEBOOK_MUTED,
 } from "../ui/notebookBg";
 import { addPenTextButton } from "../ui/penControls";
+import { fontPx, px } from "../ui/dpr";
 
 const ADMIN_IDS = (import.meta.env.VITE_ADMIN_TELEGRAM_IDS as string | undefined)
   ?.split(",")
@@ -34,7 +35,7 @@ export class AdminScene extends Phaser.Scene {
     this.add
       .text(width / 2, height * 0.08, "Админ", {
         fontFamily: "Georgia, 'Times New Roman', serif",
-        fontSize: "30px",
+        fontSize: fontPx(30),
         color: NOTEBOOK_INK,
         fontStyle: "italic",
       })
@@ -43,7 +44,7 @@ export class AdminScene extends Phaser.Scene {
     this.add
       .text(width / 2, height * 0.14, "Рассылка в game-бота", {
         fontFamily: "Georgia, 'Times New Roman', serif",
-        fontSize: "14px",
+        fontSize: fontPx(14),
         color: NOTEBOOK_MUTED,
         fontStyle: "italic",
       })
@@ -53,7 +54,7 @@ export class AdminScene extends Phaser.Scene {
       this.add
         .text(width / 2, height * 0.4, "Нет доступа", {
           fontFamily: "Georgia, 'Times New Roman', serif",
-          fontSize: "18px",
+          fontSize: fontPx(18),
           color: NOTEBOOK_INK,
           fontStyle: "italic",
         })

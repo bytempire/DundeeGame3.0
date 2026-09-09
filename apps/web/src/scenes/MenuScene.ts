@@ -7,6 +7,7 @@ import {
 } from "../ui/notebookBg";
 import { addPenTextButton } from "../ui/penControls";
 import { isClientAdmin } from "./AdminScene";
+import { DPR, fontPx } from "../ui/dpr";
 
 type MeResponse = {
   coinBalance: number;
@@ -35,7 +36,7 @@ export class MenuScene extends Phaser.Scene {
     this.add
       .text(width / 2, height * 0.1, "DUNDEE RUNNER", {
         fontFamily: "Georgia, 'Times New Roman', serif",
-        fontSize: "34px",
+        fontSize: fontPx(34),
         color: NOTEBOOK_INK,
         fontStyle: "italic",
       })
@@ -45,14 +46,14 @@ export class MenuScene extends Phaser.Scene {
     this.add
       .sprite(width / 2, height * 0.4, "crocodile-trick")
       .setOrigin(0.5, 0.9375)
-      .setScale(0.52)
+      .setScale(0.52 * DPR)
       .setDepth(5)
       .play("stick_trick");
 
     this.statusText = this.add
       .text(width / 2, height * 0.46, "Загрузка…", {
         fontFamily: "Georgia, 'Times New Roman', serif",
-        fontSize: "14px",
+        fontSize: fontPx(14),
         color: NOTEBOOK_MUTED,
         align: "center",
         fontStyle: "italic",

@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { NOTEBOOK_INK } from "./notebookBg";
+import { DPR, fontPx, px } from "./dpr";
 
 const INK = Phaser.Display.Color.HexStringToColor(NOTEBOOK_INK).color;
 
@@ -94,17 +95,18 @@ function strokeChevron(
   cy: number,
   dir: "up" | "down",
 ) {
-  const tipY = dir === "up" ? cy - 12 : cy + 12;
-  const baseY = dir === "up" ? cy + 10 : cy - 10;
+  const tipY = dir === "up" ? cy - px(12) : cy + px(12);
+  const baseY = dir === "up" ? cy + px(10) : cy - px(10);
+  const wing = px(16);
   g.beginPath();
-  g.moveTo(cx - 16, baseY);
+  g.moveTo(cx - wing, baseY);
   g.lineTo(cx, tipY);
-  g.lineTo(cx + 16, baseY);
+  g.lineTo(cx + wing, baseY);
   g.strokePath();
   g.beginPath();
-  g.moveTo(cx - 14, baseY - (dir === "up" ? 1 : -1));
-  g.lineTo(cx, tipY + (dir === "up" ? 2 : -2));
-  g.lineTo(cx + 14, baseY + (dir === "up" ? 1 : -1));
+  g.moveTo(cx - px(14), baseY - (dir === "up" ? 1 : -1) * DPR);
+  g.lineTo(cx, tipY + (dir === "up" ? 2 : -2) * DPR);
+  g.lineTo(cx + px(14), baseY + (dir === "up" ? 1 : -1) * DPR);
   g.strokePath();
 }
 
@@ -125,16 +127,17 @@ export function addPenButton(
 ): PenButton {
   const root = scene.add.container(x, y).setScrollFactor(0).setDepth(depth);
   const g = scene.add.graphics();
-  g.lineStyle(2.5, INK, 0.92);
-  strokeWobblyCircle(g, 0, 0, 34);
-  g.lineStyle(2.2, INK, 0.88);
-  strokeWobblyCircle(g, 0.8, -0.6, 34);
-  g.lineStyle(3, INK, 0.95);
+  const r = px(34);
+  g.lineStyle(2.5 * DPR, INK, 0.92);
+  strokeWobblyCircle(g, 0, 0, r);
+  g.lineStyle(2.2 * DPR, INK, 0.88);
+  strokeWobblyCircle(g, 0.8 * DPR, -0.6 * DPR, r);
+  g.lineStyle(3 * DPR, INK, 0.95);
   strokeChevron(g, 0, 0, dir);
   root.add(g);
 
   const hit = scene.add
-    .zone(0, 0, 76, 76)
+    .zone(0, 0, px(76), px(76))
     .setOrigin(0.5)
     .setInteractive({ useHandCursor: true });
   root.add(hit);
@@ -162,29 +165,36 @@ export function addPenTextButton(
     height?: number;
     depth?: number;
     paperFill?: boolean;
-    fontSize?: string;
+    /** CSS px size (HiDPI-scaled inside). Number or CSS string like "20px". */
+    fontSize?: number | string;
   },
 ): PenButton {
-  const bw = opts?.width ?? 230;
-  const bh = opts?.height ?? 46;
+  const bw = px(opts?.width ?? 230);
+  const bh = px(opts?.height ?? 46);
   const depth = opts?.depth ?? 10;
   const root = scene.add.container(x, y).setDepth(depth);
+  const fs =
+    typeof opts?.fontSize === "number"
+      ? fontPx(opts.fontSize)
+      : opts?.fontSize
+        ? fontPx(parseInt(String(opts.fontSize), 10) || 20)
+        : fontPx(20);
 
   const g = scene.add.graphics();
   if (opts?.paperFill) {
     g.fillStyle(0xf4f1e8, 0.94);
-    g.fillRoundedRect(-bw / 2, -bh / 2, bw, bh, 12);
+    g.fillRoundedRect(-bw / 2, -bh / 2, bw, bh, px(12));
   }
-  g.lineStyle(2.4, INK, 0.9);
-  strokeWobblyRoundRect(g, 0, 0, bw, bh, 14);
-  g.lineStyle(1.8, INK, 0.55);
-  strokeWobblyRoundRect(g, 1.2, -0.8, bw, bh, 14);
+  g.lineStyle(2.4 * DPR, INK, 0.9);
+  strokeWobblyRoundRect(g, 0, 0, bw, bh, px(14));
+  g.lineStyle(1.8 * DPR, INK, 0.55);
+  strokeWobblyRoundRect(g, 1.2 * DPR, -0.8 * DPR, bw, bh, px(14));
   root.add(g);
 
   const text = scene.add
     .text(0, 0, label, {
       fontFamily: "Georgia, 'Times New Roman', serif",
-      fontSize: opts?.fontSize ?? "20px",
+      fontSize: fs,
       color: NOTEBOOK_INK,
       fontStyle: "italic",
       align: "center",
@@ -193,7 +203,7 @@ export function addPenTextButton(
   root.add(text);
 
   const hit = scene.add
-    .zone(0, 0, bw + 8, bh + 8)
+    .zone(0, 0, bw + px(8), bh + px(8))
     .setOrigin(0.5)
     .setInteractive({ useHandCursor: true });
   root.add(hit);

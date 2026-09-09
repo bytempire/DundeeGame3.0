@@ -3,6 +3,7 @@ import { api, getInitData, getWebApp, isApiEnabled } from "../api";
 import { addNotebookBackground, NOTEBOOK_INK } from "../ui/notebookBg";
 import { addPenButton, addPenTextButton } from "../ui/penControls";
 import { recordLocalScore } from "../leaderboard";
+import { DPR, fontPx, px } from "../ui/dpr";
 
 type StartResponse = {
   runId: string;
@@ -52,35 +53,35 @@ type Pickup = {
 };
 
 const GROUND_Y_RATIO = 0.82;
-/** Frame size of in-game crocodile sheet (baked to display size) */
-const FRAME = 80;
-/** 1:1 with baked sheet — no runtime shrink blur */
-const PLAYER_SCALE = 1;
-const JUMP_VELOCITY = -560;
+/** Full-res clean sheet (384) — same PNG that looks sharp when opened */
+const FRAME = 384;
+/** ~92 CSS px tall; HiDPI multiplies world scale so texels stay dense */
+const PLAYER_SCALE = (92 * DPR) / FRAME;
+const JUMP_VELOCITY = -560 * DPR;
 const COYOTE_MS = 100;
 const JUMP_BUFFER_MS = 120;
-/** Hitbox near the skates (source px on 80 frame) */
-const BODY_W = 24;
-const BODY_H = 32;
+/** Hitbox near the skates (source px on 384 frame) */
+const BODY_W = 112;
+const BODY_H = 152;
 const BODY_OX = Math.round((FRAME - BODY_W) / 2);
-const BODY_OY = FRAME - BODY_H - 2;
-const DUCK_W = 42;
-const DUCK_H = 15;
+const BODY_OY = FRAME - BODY_H - 8;
+const DUCK_W = 200;
+const DUCK_H = 72;
 const DUCK_OX = Math.round((FRAME - DUCK_W) / 2);
-const DUCK_OY = FRAME - DUCK_H - 2;
-const BASE_SPEED = 280;
-const SPEED_GAIN = 8;
+const DUCK_OY = FRAME - DUCK_H - 8;
+const BASE_SPEED = 280 * DPR;
+const SPEED_GAIN = 8 * DPR;
 /** One platform tile width in px = 1 meter of run distance */
-const METERS_PER_TILE_PX = 160;
+const METERS_PER_TILE_PX = 160 * DPR;
 /** Duck collect — under pendulum (low, near the path) */
-const KEY_CHEST_OFF = 22;
+const KEY_CHEST_OFF = 22 * DPR;
 /** Jump collect — above ground traps; standing cannot reach */
-const KEY_JUMP_OFF = 92;
+const KEY_JUMP_OFF = 92 * DPR;
 /** Bait jump-key before every N-th wide spike strip */
 const BAIT_EVERY_SPIKES5 = 3;
 /** How far before the trap the bait key sits (px).
  *  Must exceed jump air-scroll so a late jump for the spikes cannot still grab it. */
-const BAIT_LEAD_PX = 200;
+const BAIT_LEAD_PX = 200 * DPR;
 
 export class PlayScene extends Phaser.Scene {
   private player!: Phaser.Physics.Arcade.Sprite;
@@ -154,7 +155,7 @@ export class PlayScene extends Phaser.Scene {
     this.paper = addNotebookBackground(this);
 
     // Visual running path (notebook platform tile) — one row = texture height
-    const pathH = 24;
+    const pathH = px(24);
     this.path = this.add
       .tileSprite(width / 2, this.groundY + pathH / 2, width + 4, pathH, "platform")
       .setScrollFactor(0)
@@ -162,7 +163,7 @@ export class PlayScene extends Phaser.Scene {
 
     // Thick static floor: top edge = groundY (feet land here)
     this.ground = this.physics.add.staticGroup();
-    const floorH = Math.max(height - this.groundY + 80, 120);
+    const floorH = Math.max(height - this.groundY + px(80), px(120));
     const groundHit = this.add
       .rectangle(width / 2, this.groundY + floorH / 2, width * 4, floorH, 0x000000, 0)
       .setScrollFactor(0);
@@ -192,7 +193,7 @@ export class PlayScene extends Phaser.Scene {
     const body = this.player.body as Phaser.Physics.Arcade.Body;
     body.setSize(BODY_W, BODY_H);
     body.setOffset(BODY_OX, BODY_OY);
-    body.setMaxVelocity(600, 1200);
+    body.setMaxVelocity(px(600), px(1200));
     body.setAllowGravity(true);
     this.player.setBounce(0);
     this.player.play("run");
@@ -200,9 +201,9 @@ export class PlayScene extends Phaser.Scene {
     this.physics.add.collider(this.player, this.ground);
 
     this.hud = this.add
-      .text(16, 16, "…", {
+      .text(px(16), px(16), "…", {
         fontFamily: "Georgia, 'Times New Roman', serif",
-        fontSize: "18px",
+        fontSize: fontPx(18),
         color: NOTEBOOK_INK,
         fontStyle: "italic",
       })
@@ -220,7 +221,7 @@ export class PlayScene extends Phaser.Scene {
     // As marked in red: both under the path — ↑ left, ↓ right
     const place = (w: number, h: number, groundY: number) => {
       const y = groundY + (h - groundY) * 0.55;
-      const gap = Math.min(w * 0.28, 120);
+      const gap = Math.min(w * 0.28, px(120));
       return {
         upX: w * 0.5 - gap,
         downX: w * 0.5 + gap,
@@ -418,7 +419,7 @@ export class PlayScene extends Phaser.Scene {
 
     this.player.x = this.scale.width * 0.22;
 
-    if (this.player.y > this.scale.height + 80) this.onHit();
+    if (this.player.y > this.scale.height + px(80)) this.onHit();
 
     this.hud.setText(
       `Дистанция: ${Math.floor(this.distance)} м\nКлючи: ${this.pickupCoins}\nПопытки: ${this.freeLeft()}` +
@@ -453,14 +454,14 @@ export class PlayScene extends Phaser.Scene {
 
   private spawnObstacle() {
     const { width } = this.scale;
-    const x = width + 80;
+    const x = width + px(80);
     const kind = OBSTACLE_CYCLE[this.obstacleIdx % OBSTACLE_CYCLE.length]!;
     this.obstacleIdx += 1;
 
     if (kind === "saw") {
-      const scale = 0.55 + this.rng() * 0.35;
+      const scale = (0.55 + this.rng() * 0.35) * DPR;
       const r = 96 * scale * 0.42;
-      const y = this.groundY - r - 2;
+      const y = this.groundY - r - px(2);
       const go = this.add.image(x, y, "saw").setScale(scale).setDepth(5);
       const spin = 180 + this.rng() * 220;
       this.obstacles.push({
@@ -480,11 +481,11 @@ export class PlayScene extends Phaser.Scene {
     }
 
     if (kind === "spikes") {
-      const scale = 0.7 + this.rng() * 0.15;
+      const scale = (0.7 + this.rng() * 0.15) * DPR;
       const hw = 96 * scale * 0.45;
       const hh = 36 * scale * 0.45;
       const go = this.add
-        .image(x, this.groundY + 2, "spikes")
+        .image(x, this.groundY + px(2), "spikes")
         .setOrigin(0.5, 1)
         .setScale(scale)
         .setDepth(5);
@@ -506,11 +507,11 @@ export class PlayScene extends Phaser.Scene {
 
     if (kind === "spikes5") {
       // Wider 5-spike strip (296×68) — scale down to a jumpable width
-      const scale = 0.42 + this.rng() * 0.08;
+      const scale = (0.42 + this.rng() * 0.08) * DPR;
       const hw = 296 * scale * 0.45;
       const hh = 68 * scale * 0.42;
       const go = this.add
-        .image(x, this.groundY + 2, "spikes5")
+        .image(x, this.groundY + px(2), "spikes5")
         .setOrigin(0.5, 1)
         .setScale(scale)
         .setDepth(5);
@@ -531,11 +532,11 @@ export class PlayScene extends Phaser.Scene {
     }
 
     // Pendulum: must duck (lie) to pass; standing torso gets hit.
-    const scale = 0.95;
+    const scale = 0.95 * DPR;
     const arm = 168 * scale;
     const r = 26 * scale;
     // Ball bottom high enough that a lying hitbox fits under it
-    const pivotY = this.groundY - arm - r - 26;
+    const pivotY = this.groundY - arm - r - px(26);
     const go = this.add
       .image(x, pivotY, "pendulum")
       .setOrigin(0.5, 0)
@@ -549,7 +550,7 @@ export class PlayScene extends Phaser.Scene {
       hh: 0,
       spin: 0,
       phase: this.rng() * Math.PI * 2,
-      amp: 38 + this.rng() * 12,
+      amp: (38 + this.rng() * 12) * DPR,
       freq: 2.2 + this.rng() * 0.6,
       arm,
     });
@@ -569,8 +570,8 @@ export class PlayScene extends Phaser.Scene {
     const go = this.add
       .image(x, y, "pickup-key")
       .setDepth(6)
-      .setScale(0.95 + this.rng() * 0.15);
-    this.coins.push({ go, r: 16, taken: false });
+      .setScale((0.95 + this.rng() * 0.15) * DPR);
+    this.coins.push({ go, r: px(16), taken: false });
   }
 
   /**
@@ -723,7 +724,7 @@ export class PlayScene extends Phaser.Scene {
     const title = this.add
       .text(width / 2, height * 0.22, "Game Over", {
         fontFamily: "Georgia, 'Times New Roman', serif",
-        fontSize: "32px",
+        fontSize: fontPx(32),
         color: "#f4f1e8",
         fontStyle: "italic",
       })
@@ -735,7 +736,7 @@ export class PlayScene extends Phaser.Scene {
         `Дистанция ${Math.floor(this.distance)} м\nКлючи забега: ${this.pickupCoins}`,
         {
           fontFamily: "Georgia, 'Times New Roman', serif",
-          fontSize: "16px",
+          fontSize: fontPx(16),
           color: "#e8e2d4",
           align: "center",
           fontStyle: "italic",
@@ -765,7 +766,7 @@ export class PlayScene extends Phaser.Scene {
     const title = this.add
       .text(width / 2, height * 0.14, "Попытки закончились", {
         fontFamily: "Georgia, 'Times New Roman', serif",
-        fontSize: "26px",
+        fontSize: fontPx(26),
         color: "#f4f1e8",
         fontStyle: "italic",
       })
@@ -773,7 +774,7 @@ export class PlayScene extends Phaser.Scene {
     const hint = this.add
       .text(width / 2, height * 0.22, "Выбери пакет продолжений:", {
         fontFamily: "Georgia, 'Times New Roman', serif",
-        fontSize: "15px",
+        fontSize: fontPx(15),
         color: "#e8e2d4",
         fontStyle: "italic",
       })
