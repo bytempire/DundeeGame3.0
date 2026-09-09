@@ -157,12 +157,12 @@ export class BossBattleScene extends Phaser.Scene {
     this.ensureAnims();
 
     const { width, height } = this.scale;
-    // Fit both full frames on screen with side padding
-    const maxByH = (height * 0.32) / 384;
-    const maxByW = (width * 0.4) / 512; // boss 512px cell must fit in ~40% width
-    this.spriteScale = Math.min(0.32, maxByH, maxByW);
-    this.groundY = height * 0.78;
-    const pad = 10;
+    // World size is CSS×DPR — scale sprites from screen fraction, no tiny 0.32 cap
+    const maxByH = (height * 0.42) / 384;
+    const maxByW = (width * 0.36) / 512;
+    this.spriteScale = Math.min(maxByH, maxByW);
+    this.groundY = height * 0.72;
+    const pad = px(12);
     const heroHalf = 192 * this.spriteScale;
     const bossHalf = 256 * this.spriteScale;
     this.heroX = pad + heroHalf;
@@ -179,9 +179,9 @@ export class BossBattleScene extends Phaser.Scene {
     // Ice strip
     const ice = this.add.graphics().setDepth(1);
     ice.fillStyle(0xd7e8f5, 0.85);
-    ice.fillRect(0, this.groundY - 8, width, height - this.groundY + 8);
-    ice.lineStyle(2, 0x6a8fad, 0.7);
-    ice.lineBetween(20, this.groundY - 8, width - 20, this.groundY - 8);
+    ice.fillRect(0, this.groundY - px(8), width, height - this.groundY + px(8));
+    ice.lineStyle(2 * DPR, 0x6a8fad, 0.7);
+    ice.lineBetween(px(20), this.groundY - px(8), width - px(20), this.groundY - px(8));
 
     this.hero = this.add
       .sprite(this.heroX, this.groundY, HERO_KEY, HF.idle[0])
@@ -201,7 +201,7 @@ export class BossBattleScene extends Phaser.Scene {
     this.laneMarker = this.add.graphics().setDepth(5).setAlpha(0);
 
     this.add
-      .text(width / 2, 18, this.cfg.name, {
+      .text(width / 2, px(18), this.cfg.name, {
         fontFamily: "Georgia, 'Times New Roman', serif",
         fontSize: fontPx(20),
         color: NOTEBOOK_INK,
@@ -211,7 +211,7 @@ export class BossBattleScene extends Phaser.Scene {
       .setDepth(40);
 
     this.heroHpText = this.add
-      .text(16, 48, "", {
+      .text(px(16), px(48), "", {
         fontFamily: "Georgia, 'Times New Roman', serif",
         fontSize: fontPx(16),
         color: NOTEBOOK_INK,
@@ -219,7 +219,7 @@ export class BossBattleScene extends Phaser.Scene {
       })
       .setDepth(40);
     this.bossHpText = this.add
-      .text(width - 16, 48, "", {
+      .text(width - px(16), px(48), "", {
         fontFamily: "Georgia, 'Times New Roman', serif",
         fontSize: fontPx(16),
         color: NOTEBOOK_INK,
@@ -228,7 +228,7 @@ export class BossBattleScene extends Phaser.Scene {
       .setOrigin(1, 0)
       .setDepth(40);
     this.statusText = this.add
-      .text(width / 2, 72, "", {
+      .text(width / 2, px(72), "", {
         fontFamily: "Georgia, 'Times New Roman', serif",
         fontSize: fontPx(14),
         color: NOTEBOOK_MUTED,
