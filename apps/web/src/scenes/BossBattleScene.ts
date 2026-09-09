@@ -76,6 +76,8 @@ export class BossBattleScene extends Phaser.Scene {
   private heroInvuln = 0;
   private heroAtkCd = 0;
   private ducking = false;
+  /** Duck held during attack/hurt — apply when heroBusy clears */
+  private pendingDuck = false;
   private jumping = false;
   private heroDead = false;
   private bossDead = false;
@@ -118,6 +120,7 @@ export class BossBattleScene extends Phaser.Scene {
     this.heroBusy = false;
     this.bossBusy = false;
     this.ducking = false;
+    this.pendingDuck = false;
     this.jumping = false;
     this.heroVy = 0;
     this.heroAirY = 0;
@@ -375,12 +378,29 @@ export class BossBattleScene extends Phaser.Scene {
   private setDuck(on: boolean) {
     if (this.heroDead || this.ended) return;
     if (on && this.jumping) return;
+    // Don't grant duck i-frames / low hitbox while still in attack/hurt pose
+    if (this.heroBusy) {
+      this.pendingDuck = on;
+      return;
+    }
+    this.pendingDuck = false;
     if (this.ducking === on) return;
     this.ducking = on;
-    if (this.heroBusy) return;
     if (on) {
       this.hero.play("bb-hero-crouch");
     } else if (!this.jumping) {
+      this.hero.play("bb-hero-idle", true);
+    }
+  }
+
+  private clearHeroBusy() {
+    this.heroBusy = false;
+    if (this.heroDead || this.ended) return;
+    if (this.pendingDuck) {
+      this.setDuck(true);
+      return;
+    }
+    if (!this.ducking && !this.jumping) {
       this.hero.play("bb-hero-idle", true);
     }
   }
@@ -441,10 +461,7 @@ export class BossBattleScene extends Phaser.Scene {
     this.hero.on("animationupdate", onUpdate);
     this.hero.once("animationcomplete", () => {
       this.hero.off("animationupdate", onUpdate);
-      this.heroBusy = false;
-      if (!this.heroDead && !this.ducking && !this.jumping) {
-        this.hero.play("bb-hero-idle", true);
-      }
+      this.clearHeroBusy();
     });
   }
 
@@ -703,6 +720,10 @@ export class BossBattleScene extends Phaser.Scene {
       return;
     }
     this.heroBusy = true;
+    if (this.ducking) {
+      this.pendingDuck = true;
+      this.ducking = false;
+    }
     this.hero.play("bb-hero-hurt");
     this.tweens.add({
       targets: this.hero,
@@ -713,10 +734,7 @@ export class BossBattleScene extends Phaser.Scene {
       onComplete: () => this.hero.setAlpha(1),
     });
     this.hero.once("animationcomplete", () => {
-      this.heroBusy = false;
-      if (!this.heroDead && !this.ducking && !this.jumping) {
-        this.hero.play("bb-hero-idle", true);
-      }
+      this.clearHeroBusy();
     });
   }
 
