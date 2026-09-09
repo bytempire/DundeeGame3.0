@@ -1,12 +1,13 @@
 import Phaser from "phaser";
 import { api, getInitData, getWebApp, isApiEnabled } from "../api";
+import { BOSSES } from "../boss/bossDefs";
 import { addNotebookBackground, NOTEBOOK_INK } from "../ui/notebookBg";
 import { addPenButton, addPenTextButton } from "../ui/penControls";
 import { recordLocalScore } from "../leaderboard";
 import { DPR, fontPx, px } from "../ui/dpr";
 
-/** First story boss appears after this many meters */
-const STORY_BOSS_AT_M = 100;
+/** Story bosses every N meters through the roster once (ends at robot). */
+const BOSS_EVERY_M = 100;
 
 type RunSnapshot = {
   distance: number;
@@ -23,6 +24,8 @@ type RunSnapshot = {
   vpnBotUsername: string;
   obstacleIdx: number;
   spikes5Count: number;
+  /** Bosses already beaten this run (next fight uses this index). */
+  bossesCleared: number;
 };
 
 type PlayData = {
@@ -145,8 +148,10 @@ export class PlayScene extends Phaser.Scene {
   private controls!: Phaser.GameObjects.Container;
   /** Count of spikes5 spawned this run (bait on every N-th) */
   private spikes5Count = 0;
-  /** Story boss at 100m already handled this run */
-  private bossEncounterDone = false;
+  /** How many story bosses beaten this run */
+  private bossesCleared = 0;
+  /** Resuming the run after a story boss fight */
+  private resumedFromBoss = false;
 
   constructor() {
     super("play");
@@ -171,7 +176,11 @@ export class PlayScene extends Phaser.Scene {
         this.vpnBotUsername = s.vpnBotUsername;
         this.obstacleIdx = s.obstacleIdx;
         this.spikes5Count = s.spikes5Count;
-        this.bossEncounterDone = true;
+        // Win → next boss in 100m; defeat keeps the same checkpoint for game over
+        this.bossesCleared = data.bossDefeat
+          ? (s.bossesCleared ?? 0)
+          : (s.bossesCleared ?? 0) + 1;
+        this.resumedFromBoss = true;
         this.coyoteMs = 0;
         this.jumpBufferMs = 0;
         this.spawnAcc = 400;
@@ -202,7 +211,8 @@ export class PlayScene extends Phaser.Scene {
     this.obstacleIdx = 0;
     this.ducking = false;
     this.spikes5Count = 0;
-    this.bossEncounterDone = false;
+    this.bossesCleared = 0;
+    this.resumedFromBoss = false;
     this.clearWorldObjects();
     this.overlay?.destroy(true);
     this.overlay = undefined;
@@ -278,14 +288,18 @@ export class PlayScene extends Phaser.Scene {
     this.createControls();
 
     this.startedAt = performance.now();
-    if (this.bossEncounterDone && this.registry.get("runSnapshot")) {
-      // Resuming after story boss — keep snapshot stats
+    if (this.resumedFromBoss) {
       if (this.dead) {
         this.time.delayedCall(0, () => void this.showGameOver());
       }
     } else {
       void this.beginRun();
     }
+  }
+
+  private nextBossAtM(): number | null {
+    if (this.bossesCleared >= BOSSES.length) return null;
+    return (this.bossesCleared + 1) * BOSS_EVERY_M;
   }
 
   private createControls() {
@@ -478,7 +492,8 @@ export class PlayScene extends Phaser.Scene {
     this.paper.tilePositionX += dx / DPR;
     this.path.tilePositionX += dx / DPR;
 
-    if (!this.bossEncounterDone && this.distance >= STORY_BOSS_AT_M) {
+    const bossAt = this.nextBossAtM();
+    if (bossAt !== null && this.distance >= bossAt) {
       this.startStoryBoss();
       return;
     }
@@ -501,8 +516,8 @@ export class PlayScene extends Phaser.Scene {
 
     this.hud.setText(
       `Дистанция: ${Math.floor(this.distance)} м` +
-        (!this.bossEncounterDone
-          ? `\nДо босса: ${Math.max(0, Math.ceil(STORY_BOSS_AT_M - this.distance))} м`
+        (bossAt !== null
+          ? `\nДо босса: ${Math.max(0, Math.ceil(bossAt - this.distance))} м`
           : "") +
         `\nКлючи: ${this.pickupCoins}\nПопытки: ${this.freeLeft()}` +
         (this.extraRevives > 0 ? ` + ${this.extraRevives}` : ""),
@@ -510,9 +525,11 @@ export class PlayScene extends Phaser.Scene {
   }
 
   private startStoryBoss() {
-    this.bossEncounterDone = true;
+    const at = this.nextBossAtM();
+    if (at === null) return;
+    const boss = BOSSES[this.bossesCleared]!;
     const snap: RunSnapshot = {
-      distance: Math.max(this.distance, STORY_BOSS_AT_M),
+      distance: Math.max(this.distance, at),
       pickupCoins: this.pickupCoins,
       reviveCount: this.reviveCount,
       extraRevives: this.extraRevives,
@@ -526,9 +543,10 @@ export class PlayScene extends Phaser.Scene {
       vpnBotUsername: this.vpnBotUsername,
       obstacleIdx: this.obstacleIdx,
       spikes5Count: this.spikes5Count,
+      bossesCleared: this.bossesCleared,
     };
     this.registry.set("runSnapshot", snap);
-    this.scene.start("boss-battle", { bossId: "bear", fromRun: true });
+    this.scene.start("boss-battle", { bossId: boss.id, fromRun: true });
   }
 
   private scrollWorld(dx: number, delta: number) {
