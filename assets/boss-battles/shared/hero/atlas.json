@@ -1,0 +1,314 @@
+{
+  "image": "spritesheet.png",
+  "frameWidth": 384,
+  "frameHeight": 384,
+  "anchorPx": {
+    "x": 192,
+    "y": 360
+  },
+  "facing": "right",
+  "flipForBoss": false,
+  "animations": {
+    "attack": {
+      "frames": [
+        "attack_01",
+        "attack_02",
+        "attack_03",
+        "attack_04"
+      ],
+      "frameMs": 120,
+      "loop": false,
+      "holdLast": false,
+      "emitProjectileFrame": 2
+    },
+    "hurt": {
+      "frames": [
+        "hurt_01",
+        "hurt_02",
+        "hurt_03",
+        "hurt_04"
+      ],
+      "frameMs": 120,
+      "loop": false,
+      "holdLast": false
+    },
+    "death": {
+      "frames": [
+        "death_01",
+        "death_02",
+        "death_03",
+        "death_04"
+      ],
+      "frameMs": 180,
+      "loop": false,
+      "holdLast": true
+    },
+    "idle": {
+      "frames": [
+        "idle_01",
+        "idle_02",
+        "idle_03",
+        "idle_04"
+      ],
+      "frameMs": 180,
+      "loop": true
+    },
+    "run": {
+      "frames": [
+        "run_01",
+        "run_02",
+        "run_03",
+        "run_04"
+      ],
+      "frameMs": 100,
+      "loop": true
+    },
+    "jump": {
+      "frames": [
+        "jump_01_takeoff",
+        "jump_02_rise",
+        "jump_03_apex",
+        "jump_04_fall"
+      ],
+      "drivenBy": "verticalVelocityAndGroundContact",
+      "loop": false
+    },
+    "crouch": {
+      "frames": [
+        "lie_01_crouch",
+        "lie_02_lower",
+        "lie_03_rest"
+      ],
+      "frameMs": 90,
+      "loop": false,
+      "holdLast": true
+    },
+    "standUp": {
+      "frames": [
+        "lie_03_rest",
+        "lie_02_lower",
+        "lie_01_crouch"
+      ],
+      "frameMs": 70,
+      "loop": false
+    }
+  },
+  "frames": [
+    {
+      "name": "attack_01",
+      "file": "attack_01.png",
+      "x": 0,
+      "y": 0,
+      "w": 384,
+      "h": 384
+    },
+    {
+      "name": "attack_02",
+      "file": "attack_02.png",
+      "x": 384,
+      "y": 0,
+      "w": 384,
+      "h": 384
+    },
+    {
+      "name": "attack_03",
+      "file": "attack_03.png",
+      "x": 768,
+      "y": 0,
+      "w": 384,
+      "h": 384
+    },
+    {
+      "name": "attack_04",
+      "file": "attack_04.png",
+      "x": 1152,
+      "y": 0,
+      "w": 384,
+      "h": 384
+    },
+    {
+      "name": "hurt_01",
+      "file": "hurt_01.png",
+      "x": 0,
+      "y": 384,
+      "w": 384,
+      "h": 384
+    },
+    {
+      "name": "hurt_02",
+      "file": "hurt_02.png",
+      "x": 384,
+      "y": 384,
+      "w": 384,
+      "h": 384
+    },
+    {
+      "name": "hurt_03",
+      "file": "hurt_03.png",
+      "x": 768,
+      "y": 384,
+      "w": 384,
+      "h": 384
+    },
+    {
+      "name": "hurt_04",
+      "file": "hurt_04.png",
+      "x": 1152,
+      "y": 384,
+      "w": 384,
+      "h": 384
+    },
+    {
+      "name": "death_01",
+      "file": "death_01.png",
+      "x": 0,
+      "y": 768,
+      "w": 384,
+      "h": 384
+    },
+    {
+      "name": "death_02",
+      "file": "death_02.png",
+      "x": 384,
+      "y": 768,
+      "w": 384,
+      "h": 384
+    },
+    {
+      "name": "death_03",
+      "file": "death_03.png",
+      "x": 768,
+      "y": 768,
+      "w": 384,
+      "h": 384
+    },
+    {
+      "name": "death_04",
+      "file": "death_04.png",
+      "x": 1152,
+      "y": 768,
+      "w": 384,
+      "h": 384
+    },
+    {
+      "name": "idle_01",
+      "file": "idle_01.png",
+      "x": 0,
+      "y": 1152,
+      "w": 384,
+      "h": 384
+    },
+    {
+      "name": "idle_02",
+      "file": "idle_02.png",
+      "x": 384,
+      "y": 1152,
+      "w": 384,
+      "h": 384
+    },
+    {
+      "name": "idle_03",
+      "file": "idle_03.png",
+      "x": 768,
+      "y": 1152,
+      "w": 384,
+      "h": 384
+    },
+    {
+      "name": "idle_04",
+      "file": "idle_04.png",
+      "x": 1152,
+      "y": 1152,
+      "w": 384,
+      "h": 384
+    },
+    {
+      "name": "run_01",
+      "file": "run_01.png",
+      "x": 0,
+      "y": 1536,
+      "w": 384,
+      "h": 384
+    },
+    {
+      "name": "run_02",
+      "file": "run_02.png",
+      "x": 384,
+      "y": 1536,
+      "w": 384,
+      "h": 384
+    },
+    {
+      "name": "run_03",
+      "file": "run_03.png",
+      "x": 768,
+      "y": 1536,
+      "w": 384,
+      "h": 384
+    },
+    {
+      "name": "run_04",
+      "file": "run_04.png",
+      "x": 1152,
+      "y": 1536,
+      "w": 384,
+      "h": 384
+    },
+    {
+      "name": "jump_01_takeoff",
+      "file": "jump_01_takeoff.png",
+      "x": 0,
+      "y": 1920,
+      "w": 384,
+      "h": 384
+    },
+    {
+      "name": "jump_02_rise",
+      "file": "jump_02_rise.png",
+      "x": 384,
+      "y": 1920,
+      "w": 384,
+      "h": 384
+    },
+    {
+      "name": "jump_03_apex",
+      "file": "jump_03_apex.png",
+      "x": 768,
+      "y": 1920,
+      "w": 384,
+      "h": 384
+    },
+    {
+      "name": "jump_04_fall",
+      "file": "jump_04_fall.png",
+      "x": 1152,
+      "y": 1920,
+      "w": 384,
+      "h": 384
+    },
+    {
+      "name": "lie_01_crouch",
+      "file": "lie_01_crouch.png",
+      "x": 0,
+      "y": 2304,
+      "w": 384,
+      "h": 384
+    },
+    {
+      "name": "lie_02_lower",
+      "file": "lie_02_lower.png",
+      "x": 384,
+      "y": 2304,
+      "w": 384,
+      "h": 384
+    },
+    {
+      "name": "lie_03_rest",
+      "file": "lie_03_rest.png",
+      "x": 768,
+      "y": 2304,
+      "w": 384,
+      "h": 384
+    }
+  ]
+}

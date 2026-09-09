@@ -1,0 +1,188 @@
+{
+  "image": "spritesheet.png",
+  "frameWidth": 512,
+  "frameHeight": 512,
+  "anchorPx": {
+    "x": 256,
+    "y": 480
+  },
+  "facing": "right",
+  "flipForBoss": true,
+  "animations": {
+    "idle": {
+      "frames": [
+        "idle_01",
+        "idle_02",
+        "idle_03",
+        "idle_04"
+      ],
+      "frameMs": 200,
+      "loop": true,
+      "holdLast": false
+    },
+    "attack": {
+      "frames": [
+        "attack_01",
+        "attack_02",
+        "attack_03",
+        "attack_04"
+      ],
+      "frameMs": 120,
+      "loop": false,
+      "holdLast": false,
+      "emitProjectileFrame": 2
+    },
+    "hurt": {
+      "frames": [
+        "hurt_01",
+        "hurt_02",
+        "hurt_03",
+        "hurt_04"
+      ],
+      "frameMs": 120,
+      "loop": false,
+      "holdLast": false
+    },
+    "death": {
+      "frames": [
+        "death_01",
+        "death_02",
+        "death_03",
+        "death_04"
+      ],
+      "frameMs": 180,
+      "loop": false,
+      "holdLast": true
+    }
+  },
+  "frames": [
+    {
+      "name": "idle_01",
+      "file": "idle_01.png",
+      "x": 0,
+      "y": 0,
+      "w": 512,
+      "h": 512
+    },
+    {
+      "name": "idle_02",
+      "file": "idle_02.png",
+      "x": 512,
+      "y": 0,
+      "w": 512,
+      "h": 512
+    },
+    {
+      "name": "idle_03",
+      "file": "idle_03.png",
+      "x": 1024,
+      "y": 0,
+      "w": 512,
+      "h": 512
+    },
+    {
+      "name": "idle_04",
+      "file": "idle_04.png",
+      "x": 1536,
+      "y": 0,
+      "w": 512,
+      "h": 512
+    },
+    {
+      "name": "attack_01",
+      "file": "attack_01.png",
+      "x": 0,
+      "y": 512,
+      "w": 512,
+      "h": 512
+    },
+    {
+      "name": "attack_02",
+      "file": "attack_02.png",
+      "x": 512,
+      "y": 512,
+      "w": 512,
+      "h": 512
+    },
+    {
+      "name": "attack_03",
+      "file": "attack_03.png",
+      "x": 1024,
+      "y": 512,
+      "w": 512,
+      "h": 512
+    },
+    {
+      "name": "attack_04",
+      "file": "attack_04.png",
+      "x": 1536,
+      "y": 512,
+      "w": 512,
+      "h": 512
+    },
+    {
+      "name": "hurt_01",
+      "file": "hurt_01.png",
+      "x": 0,
+      "y": 1024,
+      "w": 512,
+      "h": 512
+    },
+    {
+      "name": "hurt_02",
+      "file": "hurt_02.png",
+      "x": 512,
+      "y": 1024,
+      "w": 512,
+      "h": 512
+    },
+    {
+      "name": "hurt_03",
+      "file": "hurt_03.png",
+      "x": 1024,
+      "y": 1024,
+      "w": 512,
+      "h": 512
+    },
+    {
+      "name": "hurt_04",
+      "file": "hurt_04.png",
+      "x": 1536,
+      "y": 1024,
+      "w": 512,
+      "h": 512
+    },
+    {
+      "name": "death_01",
+      "file": "death_01.png",
+      "x": 0,
+      "y": 1536,
+      "w": 512,
+      "h": 512
+    },
+    {
+      "name": "death_02",
+      "file": "death_02.png",
+      "x": 512,
+      "y": 1536,
+      "w": 512,
+      "h": 512
+    },
+    {
+      "name": "death_03",
+      "file": "death_03.png",
+      "x": 1024,
+      "y": 1536,
+      "w": 512,
+      "h": 512
+    },
+    {
+      "name": "death_04",
+      "file": "death_04.png",
+      "x": 1536,
+      "y": 1536,
+      "w": 512,
+      "h": 512
+    }
+  ]
+}
