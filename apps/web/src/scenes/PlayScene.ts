@@ -288,12 +288,25 @@ export class PlayScene extends Phaser.Scene {
     this.createControls();
 
     this.startedAt = performance.now();
+    this.prioritizeNextBossWarm();
     if (this.resumedFromBoss) {
       if (this.dead) {
         this.time.delayedCall(0, () => void this.showGameOver());
       }
     } else {
       void this.beginRun();
+    }
+  }
+
+  /** Ask the background warmer to fetch the upcoming story boss first. */
+  private prioritizeNextBossWarm() {
+    if (this.bossesCleared >= BOSSES.length) return;
+    const id = BOSSES[this.bossesCleared]!.id;
+    if (this.registry.get("warmBossPriority") !== id) {
+      this.registry.set("warmBossPriority", id);
+    }
+    if (!this.scene.isActive("warm-assets")) {
+      this.scene.launch("warm-assets");
     }
   }
 
@@ -493,6 +506,9 @@ export class PlayScene extends Phaser.Scene {
     this.path.tilePositionX += dx / DPR;
 
     const bossAt = this.nextBossAtM();
+    if (bossAt !== null && this.distance >= bossAt - 40) {
+      this.prioritizeNextBossWarm();
+    }
     if (bossAt !== null && this.distance >= bossAt) {
       this.startStoryBoss();
       return;

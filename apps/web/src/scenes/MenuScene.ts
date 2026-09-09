@@ -87,6 +87,14 @@ export class MenuScene extends Phaser.Scene {
     }
 
     void this.refreshMe();
+
+    // First story boss pack while the player is still in the menu
+    if (this.registry.get("warmBossPriority") !== "bear") {
+      this.registry.set("warmBossPriority", "bear");
+    }
+    if (!this.scene.isActive("warm-assets")) {
+      this.scene.launch("warm-assets");
+    }
   }
 
   private async refreshMe() {
