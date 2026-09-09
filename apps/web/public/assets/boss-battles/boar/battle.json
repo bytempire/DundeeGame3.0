@@ -18,8 +18,8 @@
   "boss": {
     "hp": 18,
     "damage": 1,
-    "attackWindupMs": 1050,
-    "attackCooldownMs": 2000,
+    "attackWindupMs": 892,
+    "attackCooldownMs": 1500,
     "projectile": "puck_heavy",
     "projectileSpeedPxPerSec": 330,
     "lanePattern": [

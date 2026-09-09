@@ -18,8 +18,8 @@
   "boss": {
     "hp": 24,
     "damage": 1,
-    "attackWindupMs": 900,
-    "attackCooldownMs": 2600,
+    "attackWindupMs": 765,
+    "attackCooldownMs": 1950,
     "projectile": "puck_energy",
     "projectileSpeedPxPerSec": 480,
     "lanePattern": [
@@ -45,8 +45,8 @@
   "prototypeValues": true,
   "robot": {
     "shotsPerBurst": 3,
-    "shotIntervalMs": 1200,
-    "overheatMs": 1600,
+    "shotIntervalMs": 960,
+    "overheatMs": 1360,
     "onlyTakesDamageWhileOverheated": true
   }
 }
