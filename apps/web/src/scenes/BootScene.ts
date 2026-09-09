@@ -26,6 +26,7 @@ export class BootScene extends Phaser.Scene {
       { frameWidth: 384, frameHeight: 384 },
     );
     this.load.image("platform", `${base}assets/platform_static.png`);
+    this.load.image("puck-hit-button", `${base}assets/ui/puck-hit-button.png`);
     this.load.image("saw", `${base}assets/saw_blade.png`);
     this.load.image("spikes", `${base}assets/spike_trap.png`);
     this.load.image("spikes5", `${base}assets/spikes_5.png`);

@@ -153,13 +153,21 @@ export function addPenButton(
   strokeWobblyCircle(g, 0, 0, r);
   g.lineStyle(2.2 * DPR, INK, 0.88);
   strokeWobblyCircle(g, 0.8 * DPR, -0.6 * DPR, r);
+  root.add(g);
+
   if (kind === "hit") {
-    strokePuck(g, -px(2), 0);
+    if (scene.textures.exists("puck-hit-button")) {
+      const puck = scene.add
+        .image(0, 0, "puck-hit-button")
+        .setDisplaySize(px(52), px(52));
+      root.add(puck);
+    } else {
+      strokePuck(g, -px(2), 0);
+    }
   } else {
     g.lineStyle(3 * DPR, INK, 0.95);
     strokeChevron(g, 0, 0, kind);
   }
-  root.add(g);
 
   const hit = scene.add
     .zone(0, 0, px(76), px(76))
