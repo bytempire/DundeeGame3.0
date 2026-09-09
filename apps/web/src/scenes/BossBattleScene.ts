@@ -13,7 +13,7 @@ import {
 import { addPenButton, addPenTextButton } from "../ui/penControls";
 import { DPR, fontPx, px } from "../ui/dpr";
 
-type BattleData = { bossId?: string };
+type BattleData = { bossId?: string; fromRun?: boolean };
 
 type Puck = {
   sprite: Phaser.GameObjects.Image;
@@ -96,6 +96,7 @@ export class BossBattleScene extends Phaser.Scene {
   private robotShots = 0;
   private robotOverheatUntil = 0;
   private robotArmored = true;
+  private fromRun = false;
 
   private pucks: Puck[] = [];
   private heroBar!: Phaser.GameObjects.Graphics;
@@ -117,6 +118,7 @@ export class BossBattleScene extends Phaser.Scene {
   init(data: BattleData) {
     const id = data.bossId && isBossId(data.bossId) ? data.bossId : "bear";
     this.bossId = id;
+    this.fromRun = !!data.fromRun;
     this.pucks = [];
     this.heroDead = false;
     this.bossDead = false;
@@ -263,7 +265,10 @@ export class BossBattleScene extends Phaser.Scene {
       width - px(52),
       px(28),
       "✕",
-      () => this.scene.start("boss-select"),
+      () => {
+        if (this.fromRun) this.scene.start("menu");
+        else this.scene.start("boss-select");
+      },
       { width: 44, height: 36, fontSize: 18, depth: 50 },
     );
 
@@ -914,28 +919,57 @@ export class BossBattleScene extends Phaser.Scene {
       px(16),
     );
     this.add
-      .text(width / 2, cy - px(40), won ? "Победа!" : "Поражение", {
-        fontFamily: "Georgia, 'Times New Roman', serif",
-        fontSize: fontPx(28),
-        color: NOTEBOOK_INK,
-        fontStyle: "italic",
-      })
+      .text(
+        width / 2,
+        cy - px(40),
+        won
+          ? this.fromRun
+            ? "Босс повержен!"
+            : "Победа!"
+          : "Поражение",
+        {
+          fontFamily: "Georgia, 'Times New Roman', serif",
+          fontSize: fontPx(26),
+          color: NOTEBOOK_INK,
+          fontStyle: "italic",
+        },
+      )
       .setOrigin(0.5)
       .setDepth(61);
+
+    if (this.fromRun && won) {
+      addPenTextButton(
+        this,
+        width / 2,
+        cy + px(40),
+        "Дальше",
+        () => this.scene.start("play", { resume: true }),
+        { depth: 61 },
+      );
+      return;
+    }
+
     addPenTextButton(
       this,
       width / 2,
       cy + px(30),
       "Ещё раз",
-      () => this.scene.restart({ bossId: this.bossId }),
+      () =>
+        this.scene.restart({ bossId: this.bossId, fromRun: this.fromRun }),
       { depth: 61 },
     );
     addPenTextButton(
       this,
       width / 2,
       cy + px(90),
-      "К боссам",
-      () => this.scene.start("boss-select"),
+      this.fromRun ? "В меню" : "К боссам",
+      () => {
+        if (this.fromRun) {
+          this.scene.start("play", { resume: true, bossDefeat: true });
+        } else {
+          this.scene.start("boss-select");
+        }
+      },
       { depth: 61 },
     );
   }

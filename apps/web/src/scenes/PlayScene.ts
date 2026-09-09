@@ -5,6 +5,31 @@ import { addPenButton, addPenTextButton } from "../ui/penControls";
 import { recordLocalScore } from "../leaderboard";
 import { DPR, fontPx, px } from "../ui/dpr";
 
+/** First story boss appears after this many meters */
+const STORY_BOSS_AT_M = 100;
+
+type RunSnapshot = {
+  distance: number;
+  pickupCoins: number;
+  reviveCount: number;
+  extraRevives: number;
+  freeRevivesPerRun: number;
+  scrollSpeed: number;
+  runId: string | null;
+  seed: string;
+  maxSpeedSeen: number;
+  maxPackSize: number;
+  starsPerAttempt: number;
+  vpnBotUsername: string;
+  obstacleIdx: number;
+  spikes5Count: number;
+};
+
+type PlayData = {
+  resume?: boolean;
+  bossDefeat?: boolean;
+};
+
 type StartResponse = {
   runId: string;
   seed: string;
@@ -118,12 +143,47 @@ export class PlayScene extends Phaser.Scene {
   private controls!: Phaser.GameObjects.Container;
   /** Count of spikes5 spawned this run (bait on every N-th) */
   private spikes5Count = 0;
+  /** Story boss at 100m already handled this run */
+  private bossEncounterDone = false;
 
   constructor() {
     super("play");
   }
 
-  init() {
+  init(data: PlayData = {}) {
+    if (data.resume) {
+      const s = this.registry.get("runSnapshot") as RunSnapshot | undefined;
+      if (s) {
+        this.dead = !!data.bossDefeat;
+        this.distance = s.distance;
+        this.pickupCoins = s.pickupCoins;
+        this.reviveCount = s.reviveCount;
+        this.extraRevives = s.extraRevives;
+        this.freeRevivesPerRun = s.freeRevivesPerRun;
+        this.scrollSpeed = s.scrollSpeed;
+        this.runId = s.runId;
+        this.seed = s.seed;
+        this.maxSpeedSeen = s.maxSpeedSeen;
+        this.maxPackSize = s.maxPackSize;
+        this.starsPerAttempt = s.starsPerAttempt;
+        this.vpnBotUsername = s.vpnBotUsername;
+        this.obstacleIdx = s.obstacleIdx;
+        this.spikes5Count = s.spikes5Count;
+        this.bossEncounterDone = true;
+        this.coyoteMs = 0;
+        this.jumpBufferMs = 0;
+        this.spawnAcc = 400;
+        this.jumping = false;
+        this.ducking = false;
+        this.clearWorldObjects();
+        this.overlay?.destroy(true);
+        this.overlay = undefined;
+        const seedNum = Number.parseInt(s.seed.slice(0, 8), 16) || 1;
+        this.rng = this.mulberry32(seedNum ^ Math.floor(s.distance));
+        return;
+      }
+    }
+
     this.dead = false;
     this.distance = 0;
     this.pickupCoins = 0;
@@ -140,6 +200,7 @@ export class PlayScene extends Phaser.Scene {
     this.obstacleIdx = 0;
     this.ducking = false;
     this.spikes5Count = 0;
+    this.bossEncounterDone = false;
     this.clearWorldObjects();
     this.overlay?.destroy(true);
     this.overlay = undefined;
@@ -215,7 +276,14 @@ export class PlayScene extends Phaser.Scene {
     this.createControls();
 
     this.startedAt = performance.now();
-    void this.beginRun();
+    if (this.bossEncounterDone && this.registry.get("runSnapshot")) {
+      // Resuming after story boss — keep snapshot stats
+      if (this.dead) {
+        this.time.delayedCall(0, () => void this.showGameOver());
+      }
+    } else {
+      void this.beginRun();
+    }
   }
 
   private createControls() {
@@ -408,6 +476,11 @@ export class PlayScene extends Phaser.Scene {
     this.paper.tilePositionX += dx / DPR;
     this.path.tilePositionX += dx / DPR;
 
+    if (!this.bossEncounterDone && this.distance >= STORY_BOSS_AT_M) {
+      this.startStoryBoss();
+      return;
+    }
+
     this.spawnAcc += delta;
 
     // Time between obstacles (ms). Keep wide so one jump clears before next.
@@ -428,6 +501,28 @@ export class PlayScene extends Phaser.Scene {
       `Дистанция: ${Math.floor(this.distance)} м\nКлючи: ${this.pickupCoins}\nПопытки: ${this.freeLeft()}` +
         (this.extraRevives > 0 ? ` + ${this.extraRevives}` : ""),
     );
+  }
+
+  private startStoryBoss() {
+    this.bossEncounterDone = true;
+    const snap: RunSnapshot = {
+      distance: Math.max(this.distance, STORY_BOSS_AT_M),
+      pickupCoins: this.pickupCoins,
+      reviveCount: this.reviveCount,
+      extraRevives: this.extraRevives,
+      freeRevivesPerRun: this.freeRevivesPerRun,
+      scrollSpeed: this.scrollSpeed,
+      runId: this.runId,
+      seed: this.seed,
+      maxSpeedSeen: this.maxSpeedSeen,
+      maxPackSize: this.maxPackSize,
+      starsPerAttempt: this.starsPerAttempt,
+      vpnBotUsername: this.vpnBotUsername,
+      obstacleIdx: this.obstacleIdx,
+      spikes5Count: this.spikes5Count,
+    };
+    this.registry.set("runSnapshot", snap);
+    this.scene.start("boss-battle", { bossId: "bear", fromRun: true });
   }
 
   private scrollWorld(dx: number, delta: number) {
