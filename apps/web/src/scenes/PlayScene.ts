@@ -55,24 +55,21 @@ const STARS_PER_ATTEMPT = 5;
 
 type Obstacle = {
   go: Phaser.GameObjects.Image;
-  kind: "saw" | "spikes" | "pendulum" | "spikes5";
-  r: number; // saw / pendulum ball radius
+  kind: "saw" | "spikes" | "pendulum" | "spikes5" | "puck";
+  r: number; // saw / pendulum / flying puck radius
   hw: number; // spikes half-width
   hh: number; // spikes half-height
-  spin: number; // deg/sec (saws only)
-  // pendulum swing
+  spin: number; // deg/sec (saws / flying puck)
+  // pendulum swing · flying puck uses freq as extra approach speed (px/s)
   phase: number;
   amp: number; // max angle deg
-  freq: number; // rad/sec
+  freq: number; // rad/sec · or puck extra px/s
   arm: number; // pivot → ball center (world px)
 };
 
-const OBSTACLE_CYCLE: Array<"saw" | "spikes" | "pendulum" | "spikes5"> = [
-  "saw",
-  "spikes",
-  "pendulum",
-  "spikes5",
-];
+const OBSTACLE_CYCLE: Array<
+  "saw" | "spikes" | "pendulum" | "spikes5" | "puck"
+> = ["saw", "spikes", "pendulum", "spikes5", "puck"];
 
 type Pickup = {
   go: Phaser.GameObjects.Image;
@@ -107,6 +104,8 @@ const METERS_PER_TILE_PX = 160 * DPR;
 const KEY_CHEST_OFF = 22 * DPR;
 /** Jump collect — above ground traps; standing cannot reach */
 const KEY_JUMP_OFF = 92 * DPR;
+/** Flying puck center height — mid torso: jump over or duck under */
+const PUCK_FLY_OFF = 54 * DPR;
 /** Bait jump-key before every N-th wide spike strip */
 const BAIT_EVERY_SPIKES5 = 3;
 /** How far before the trap the bait key sits (px).
@@ -569,11 +568,15 @@ export class PlayScene extends Phaser.Scene {
     for (let i = this.obstacles.length - 1; i >= 0; i--) {
       const o = this.obstacles[i]!;
       o.go.x -= dx;
-      if (o.kind === "saw") {
+      if (o.kind === "saw" || o.kind === "puck") {
         o.go.angle += (o.spin * delta) / 1000;
       } else if (o.kind === "pendulum") {
         o.phase += (o.freq * delta) / 1000;
         o.go.setAngle(Math.sin(o.phase) * o.amp);
+      }
+      // Flying puck closes in faster than the scroll
+      if (o.kind === "puck") {
+        o.go.x -= (o.freq * delta) / 1000;
       }
       // Despawn only once fully past the left edge (HiDPI sprites are wide)
       const leftExtent = Math.max(
@@ -682,6 +685,33 @@ export class PlayScene extends Phaser.Scene {
       return;
     }
 
+    if (kind === "puck") {
+      // Mid-height flyer: jump over or duck under
+      const scale = (0.48 + this.rng() * 0.08) * DPR;
+      const r = 128 * scale * 0.36;
+      const y = this.groundY - PUCK_FLY_OFF;
+      const go = this.add
+        .image(0, y, "puck-fly")
+        .setScale(scale)
+        .setDepth(6);
+      const x = width + go.displayWidth * 0.5 + px(8);
+      go.setX(x);
+      this.obstacles.push({
+        go,
+        kind: "puck",
+        r,
+        hw: 0,
+        hh: 0,
+        spin: 220 + this.rng() * 160,
+        phase: 0,
+        amp: 0,
+        freq: 90 * DPR + this.rng() * 50 * DPR, // extra approach speed
+        arm: 0,
+      });
+      // No key — the choice is jump / duck, not a pickup
+      return;
+    }
+
     // Pendulum: must duck (lie) to pass; standing torso gets hit.
     const scale = 0.95 * DPR;
     const arm = 168 * scale;
@@ -734,9 +764,10 @@ export class PlayScene extends Phaser.Scene {
    * - other ground traps → safe jump-key above (clear the trap)
    */
   private attachKeyForObstacle(
-    kind: "saw" | "spikes" | "pendulum" | "spikes5",
+    kind: "saw" | "spikes" | "pendulum" | "spikes5" | "puck",
     trapX: number,
   ) {
+    if (kind === "puck") return;
     if (kind === "pendulum") {
       this.spawnKeyAt(trapX, this.groundY - KEY_CHEST_OFF);
       return;
@@ -808,6 +839,14 @@ export class PlayScene extends Phaser.Scene {
         hit = Phaser.Geom.Rectangle.Overlaps(
           pb,
           new Phaser.Geom.Rectangle(left, top, right - left, bottom - top),
+        );
+      } else if (o.kind === "puck") {
+        // Standing: tall torso. Jump / duck: physics body (moves up or shrinks).
+        const box =
+          this.ducking || this.jumping || !grounded ? pb : hazard;
+        hit = Phaser.Geom.Intersects.CircleToRectangle(
+          new Phaser.Geom.Circle(o.go.x, o.go.y, o.r),
+          box,
         );
       } else {
         const ball = this.pendulumBall(o);

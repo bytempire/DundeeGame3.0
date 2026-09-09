@@ -145,6 +145,7 @@ export class BootScene extends Phaser.Scene {
     this.load.image("spikes", `${base}assets/spike_trap.png`);
     this.load.image("spikes5", `${base}assets/spikes_5.png`);
     this.load.image("pendulum", `${base}assets/pendulum.png`);
+    this.load.image("puck-fly", `${base}assets/puck_fly.png`);
 
     this.load.on("progress", (value: number) => {
       this.loadP = Math.max(0, Math.min(1, value));
