@@ -6,29 +6,17 @@ import {
   NOTEBOOK_MUTED,
 } from "../ui/notebookBg";
 import { DPR, fontPx, px } from "../ui/dpr";
-import {
-  BB_FX_KEY,
-  BB_HERO_KEY,
-  bossTextureKey,
-  queueBossBattleAssets,
-} from "../boss/bossAssets";
-import { BOSSES } from "../boss/bossDefs";
-import { queueBossTrickAssets } from "./BossIntroScene";
-
-/** Splash stays on screen this long so the load screen is always visible. */
-const BOOT_MIN_MS = 5000;
 
 export class BootScene extends Phaser.Scene {
   private barFill!: Phaser.GameObjects.Rectangle;
   private barWidth = 0;
-  private assetsReady = false;
-  private splashDone = false;
+  private status!: Phaser.GameObjects.Text;
 
   constructor() {
     super("boot");
   }
 
-  /** Phase 1 — only the menu hero, so the splash can show immediately. */
+  /** Phase 1 — splash hero only, so UI appears immediately. */
   preload() {
     const base = import.meta.env.BASE_URL;
     this.load.spritesheet(
@@ -41,8 +29,6 @@ export class BootScene extends Phaser.Scene {
   create() {
     const { width, height } = this.scale;
     addNotebookBackground(this);
-    this.assetsReady = false;
-    this.splashDone = false;
 
     this.textures
       .get("crocodile-trick")
@@ -81,8 +67,8 @@ export class BootScene extends Phaser.Scene {
       .setDepth(5)
       .play("stick_trick");
 
-    this.add
-      .text(width / 2, height * 0.62, "Загрузка…", {
+    this.status = this.add
+      .text(width / 2, height * 0.62, "Загрузка… 0%", {
         fontFamily: "Georgia, 'Times New Roman', serif",
         fontSize: fontPx(16),
         color: NOTEBOOK_MUTED,
@@ -104,30 +90,14 @@ export class BootScene extends Phaser.Scene {
       .rectangle(width / 2 - this.barWidth / 2, barY, 1, barH, ink, 0.9)
       .setOrigin(0, 0.5);
 
-    // Smooth 5s fill so the splash always reads clearly (even with cached assets)
-    this.tweens.add({
-      targets: this.barFill,
-      width: this.barWidth,
-      duration: BOOT_MIN_MS,
-      ease: "Sine.easeInOut",
-      onComplete: () => {
-        this.splashDone = true;
-        this.tryEnterMenu();
-      },
-    });
-
-    this.loadRest();
+    this.loadRunner();
   }
 
-  /** Phase 2 — runner + all boss-battle assets while the bar animates. */
-  private loadRest() {
+  /** Phase 2 — only what menu + run need. Boss packs warm in the background later. */
+  private loadRunner() {
     const base = import.meta.env.BASE_URL;
 
-    this.load.spritesheet(
-      "crocodile",
-      `${base}assets/crocodile-hero/crocodile-hockey-clean.png`,
-      { frameWidth: 384, frameHeight: 384 },
-    );
+    // One sheet for gameplay (was duplicated as crocodile + crocodile-game)
     this.load.spritesheet(
       "crocodile-game",
       `${base}assets/crocodile-hero/crocodile-hockey-clean.png`,
@@ -139,53 +109,28 @@ export class BootScene extends Phaser.Scene {
     this.load.image("spikes", `${base}assets/spike_trap.png`);
     this.load.image("spikes5", `${base}assets/spikes_5.png`);
     this.load.image("pendulum", `${base}assets/pendulum.png`);
-    queueBossBattleAssets(this);
-    queueBossTrickAssets(this);
+
+    this.load.on("progress", (value: number) => {
+      const v = Math.max(0, Math.min(1, value));
+      this.barFill.width = Math.max(1, this.barWidth * v);
+      this.status.setText(`Загрузка… ${Math.round(v * 100)}%`);
+    });
 
     this.load.once("complete", () => {
-      this.assetsReady = true;
-      this.tryEnterMenu();
+      this.barFill.width = this.barWidth;
+      this.status.setText("Загрузка… 100%");
+      this.finishBoot();
     });
 
     this.load.start();
   }
 
-  private tryEnterMenu() {
-    if (!this.assetsReady || !this.splashDone) return;
-    this.finishBoot();
-  }
-
   private finishBoot() {
     ensureKeyTexture(this);
-    this.textures.get("crocodile").setFilter(Phaser.Textures.FilterMode.LINEAR);
     this.textures
       .get("crocodile-game")
       .setFilter(Phaser.Textures.FilterMode.LINEAR);
 
-    if (this.textures.exists(BB_HERO_KEY)) {
-      this.textures.get(BB_HERO_KEY).setFilter(Phaser.Textures.FilterMode.LINEAR);
-    }
-    if (this.textures.exists(BB_FX_KEY)) {
-      this.textures.get(BB_FX_KEY).setFilter(Phaser.Textures.FilterMode.LINEAR);
-    }
-    for (const boss of BOSSES) {
-      const key = bossTextureKey(boss.id);
-      if (this.textures.exists(key)) {
-        this.textures.get(key).setFilter(Phaser.Textures.FilterMode.LINEAR);
-      }
-    }
-
-    if (!this.anims.exists("menu-idle")) {
-      this.anims.create({
-        key: "menu-idle",
-        frames: this.anims.generateFrameNumbers("crocodile", {
-          start: 0,
-          end: 3,
-        }),
-        frameRate: 5,
-        repeat: -1,
-      });
-    }
     if (!this.anims.exists("idle")) {
       this.anims.create({
         key: "idle",
@@ -231,7 +176,8 @@ export class BootScene extends Phaser.Scene {
       });
     }
 
-    this.barFill.width = this.barWidth;
+    // Parallel background download of all boss packs
+    this.scene.launch("warm-assets");
     this.scene.start("menu");
   }
 }

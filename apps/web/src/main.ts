@@ -7,6 +7,7 @@ import { AdminScene } from "./scenes/AdminScene";
 import { BossSelectScene } from "./scenes/BossSelectScene";
 import { BossIntroScene } from "./scenes/BossIntroScene";
 import { BossBattleScene } from "./scenes/BossBattleScene";
+import { WarmAssetsScene } from "./scenes/WarmAssetsScene";
 import { getWebApp } from "./api";
 import { DPR, px } from "./ui/dpr";
 
@@ -57,6 +58,7 @@ const config: Phaser.Types.Core.GameConfig = {
     BossSelectScene,
     BossIntroScene,
     BossBattleScene,
+    WarmAssetsScene,
   ],
 };
 

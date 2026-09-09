@@ -1,19 +1,23 @@
 import Phaser from "phaser";
 import { BOSSES, type BossId, isBossId } from "../boss/bossDefs";
 import {
+  TRICK_FRAME_H,
+  TRICK_FRAME_RATE,
+  TRICK_FRAME_W,
+  TRICK_ORIGIN_X,
+  TRICK_ORIGIN_Y,
+  bossTrickAnimKey,
+  bossTrickKey,
+  isBossBundleReady,
+  queueBossBattleAssets,
+  queueBossTrickAssets,
+} from "../boss/bossAssets";
+import {
   addNotebookBackground,
   NOTEBOOK_INK,
   NOTEBOOK_MUTED,
 } from "../ui/notebookBg";
-import { DPR, fontPx } from "../ui/dpr";
-
-/** Stick-trick sheets: 8 frames @ 384×384, grid 4×2, 8 FPS. */
-export const TRICK_FRAME_W = 384;
-export const TRICK_FRAME_H = 384;
-export const TRICK_FRAME_RATE = 8;
-/** Feet anchor from pack (176, 340) → normalized origin */
-export const TRICK_ORIGIN_X = 176 / 384;
-export const TRICK_ORIGIN_Y = 340 / 384;
+import { DPR, fontPx, px } from "../ui/dpr";
 
 const TRICK_RU: Record<BossId, string> = {
   bear: "Перекладывание шайбы с клюшки в ловушку и обратно",
@@ -22,14 +26,6 @@ const TRICK_RU: Record<BossId, string> = {
   octopus: "Перекладывание шайбы между двумя клюшками",
   robot: "Обвод клюшкой неподвижной шайбы",
 };
-
-export function bossTrickKey(bossId: BossId) {
-  return `boss-trick-${bossId}`;
-}
-
-export function bossTrickAnimKey(bossId: BossId) {
-  return `boss-trick-anim-${bossId}`;
-}
 
 type IntroData = { bossId?: string; fromRun?: boolean };
 
@@ -50,11 +46,49 @@ export class BossIntroScene extends Phaser.Scene {
     this.entered = false;
   }
 
-  preload() {
-    queueBossTrickAssets(this);
+  create() {
+    const { width, height } = this.scale;
+    addNotebookBackground(this);
+
+    if (isBossBundleReady(this, this.bossId)) {
+      this.showTrick();
+      return;
+    }
+
+    // Warm didn't finish yet — load just this boss with a visible bar
+    const barW = Math.min(width * 0.62, px(280));
+    const barY = height * 0.55;
+    const ink = Phaser.Display.Color.HexStringToColor(NOTEBOOK_INK).color;
+    this.add
+      .text(width / 2, height * 0.42, "Готовим бой…", {
+        fontFamily: "Georgia, 'Times New Roman', serif",
+        fontSize: fontPx(18),
+        color: NOTEBOOK_MUTED,
+        fontStyle: "italic",
+      })
+      .setOrigin(0.5);
+    this.add
+      .rectangle(width / 2, barY, barW + px(4), px(12))
+      .setStrokeStyle(px(2), ink, 0.85)
+      .setFillStyle(0xf4f1e8, 1);
+    const fill = this.add
+      .rectangle(width / 2 - barW / 2, barY, 1, px(8), ink, 0.9)
+      .setOrigin(0, 0.5);
+
+    queueBossTrickAssets(this, this.bossId);
+    queueBossBattleAssets(this, this.bossId);
+
+    this.load.on("progress", (v: number) => {
+      fill.width = Math.max(1, barW * v);
+    });
+    this.load.once("complete", () => this.showTrick());
+    this.load.start();
   }
 
-  create() {
+  private showTrick() {
+    // Clear interim loading UI
+    this.children.removeAll(true);
+
     const { width, height } = this.scale;
     addNotebookBackground(this);
 
@@ -70,7 +104,7 @@ export class BossIntroScene extends Phaser.Scene {
           end: 7,
         }),
         frameRate: TRICK_FRAME_RATE,
-        repeat: 1, // ~2 seconds preview
+        repeat: 1,
       });
     }
 
@@ -103,7 +137,10 @@ export class BossIntroScene extends Phaser.Scene {
       .setDepth(2)
       .setTileScale(DPR, DPR);
 
-    const scale = Math.min((height * 0.48) / TRICK_FRAME_H, (width * 0.72) / TRICK_FRAME_W);
+    const scale = Math.min(
+      (height * 0.48) / TRICK_FRAME_H,
+      (width * 0.72) / TRICK_FRAME_W,
+    );
     const sprite = this.add
       .sprite(width * 0.55, groundY, texKey, 0)
       .setOrigin(TRICK_ORIGIN_X, TRICK_ORIGIN_Y)
@@ -135,19 +172,6 @@ export class BossIntroScene extends Phaser.Scene {
     this.scene.start("boss-battle", {
       bossId: this.bossId,
       fromRun: this.fromRun,
-    });
-  }
-}
-
-/** Preload all boss trick sheets (boot / intro). */
-export function queueBossTrickAssets(scene: Phaser.Scene) {
-  const base = `${import.meta.env.BASE_URL}assets/boss-battles`;
-  for (const boss of BOSSES) {
-    const key = bossTrickKey(boss.id);
-    if (scene.textures.exists(key)) continue;
-    scene.load.spritesheet(key, `${base}/${boss.id}/trick.png`, {
-      frameWidth: TRICK_FRAME_W,
-      frameHeight: TRICK_FRAME_H,
     });
   }
 }

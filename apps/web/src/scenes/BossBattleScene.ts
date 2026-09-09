@@ -143,8 +143,8 @@ export class BossBattleScene extends Phaser.Scene {
   }
 
   preload() {
-    // Usually already cached from BootScene — only fetch what's missing
-    queueBossBattleAssets(this);
+    // Usually already warm from background; only fetch this boss if missing
+    queueBossBattleAssets(this, this.bossId);
   }
 
   create() {
