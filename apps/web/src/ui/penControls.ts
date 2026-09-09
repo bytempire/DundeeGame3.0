@@ -147,26 +147,28 @@ export function addPenButton(
   depth = 30,
 ): PenButton {
   const root = scene.add.container(x, y).setScrollFactor(0).setDepth(depth);
-  const g = scene.add.graphics();
   const r = px(34);
-  g.lineStyle(2.5 * DPR, INK, 0.92);
-  strokeWobblyCircle(g, 0, 0, r);
-  g.lineStyle(2.2 * DPR, INK, 0.88);
-  strokeWobblyCircle(g, 0.8 * DPR, -0.6 * DPR, r);
-  root.add(g);
 
   if (kind === "hit") {
     if (scene.textures.exists("puck-hit-button")) {
-      const puck = scene.add
-        .image(0, 0, "puck-hit-button")
-        .setDisplaySize(px(52), px(52));
-      root.add(puck);
+      // Same outer size as ↑/↓ rings, no ink outline
+      root.add(
+        scene.add.image(0, 0, "puck-hit-button").setDisplaySize(px(68), px(68)),
+      );
     } else {
+      const g = scene.add.graphics();
       strokePuck(g, -px(2), 0);
+      root.add(g);
     }
   } else {
+    const g = scene.add.graphics();
+    g.lineStyle(2.5 * DPR, INK, 0.92);
+    strokeWobblyCircle(g, 0, 0, r);
+    g.lineStyle(2.2 * DPR, INK, 0.88);
+    strokeWobblyCircle(g, 0.8 * DPR, -0.6 * DPR, r);
     g.lineStyle(3 * DPR, INK, 0.95);
     strokeChevron(g, 0, 0, kind);
+    root.add(g);
   }
 
   const hit = scene.add
