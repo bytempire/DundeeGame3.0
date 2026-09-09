@@ -155,11 +155,13 @@ export class PlayScene extends Phaser.Scene {
     this.paper = addNotebookBackground(this);
 
     // Visual running path (notebook platform tile) — one row = texture height
-    const pathH = px(24);
+    // Texture is 160×24; under HiDPI scale the tile so we don't stack 3 rows
+    const pathH = 24 * DPR;
     this.path = this.add
       .tileSprite(width / 2, this.groundY + pathH / 2, width + 4, pathH, "platform")
       .setScrollFactor(0)
       .setDepth(2);
+    this.path.setTileScale(DPR, DPR);
 
     // Thick static floor: top edge = groundY (feet land here)
     this.ground = this.physics.add.staticGroup();
@@ -550,7 +552,7 @@ export class PlayScene extends Phaser.Scene {
       hh: 0,
       spin: 0,
       phase: this.rng() * Math.PI * 2,
-      amp: (38 + this.rng() * 12) * DPR,
+      amp: 38 + this.rng() * 12,
       freq: 2.2 + this.rng() * 0.6,
       arm,
     });
