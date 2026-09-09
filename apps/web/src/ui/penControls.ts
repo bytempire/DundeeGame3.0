@@ -151,9 +151,9 @@ export function addPenButton(
 
   if (kind === "hit") {
     if (scene.textures.exists("puck-hit-button")) {
-      // Same outer size as ↑/↓ rings, no ink outline
+      // Larger than ↑/↓ rings so the strike control reads clearly
       root.add(
-        scene.add.image(0, 0, "puck-hit-button").setDisplaySize(px(68), px(68)),
+        scene.add.image(0, 0, "puck-hit-button").setDisplaySize(px(88), px(88)),
       );
     } else {
       const g = scene.add.graphics();
@@ -172,7 +172,7 @@ export function addPenButton(
   }
 
   const hit = scene.add
-    .zone(0, 0, px(76), px(76))
+    .zone(0, 0, kind === "hit" ? px(96) : px(76), kind === "hit" ? px(96) : px(76))
     .setOrigin(0.5)
     .setInteractive({ useHandCursor: true });
   root.add(hit);
