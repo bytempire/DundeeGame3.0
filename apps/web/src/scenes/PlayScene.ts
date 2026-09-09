@@ -110,7 +110,7 @@ const PUCK_FLY_OFF = 54 * DPR;
 const BAIT_EVERY_SPIKES5 = 3;
 /** How far before the trap the bait key sits (px).
  *  Must exceed jump air-scroll so a late jump for the spikes cannot still grab it. */
-const BAIT_LEAD_PX = 200 * DPR;
+const BAIT_LEAD_PX = 360 * DPR;
 
 export class PlayScene extends Phaser.Scene {
   private player!: Phaser.Physics.Arcade.Sprite;
