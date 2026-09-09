@@ -110,7 +110,7 @@ const PUCK_FLY_OFF = 54 * DPR;
 const BAIT_EVERY_SPIKES5 = 3;
 /** How far before the trap the bait key sits (px).
  *  Must exceed jump air-scroll so a late jump for the spikes cannot still grab it. */
-const BAIT_LEAD_PX = 360 * DPR;
+const BAIT_LEAD_PX = 200 * DPR;
 
 export class PlayScene extends Phaser.Scene {
   private player!: Phaser.Physics.Arcade.Sprite;
@@ -667,7 +667,15 @@ export class PlayScene extends Phaser.Scene {
         .setOrigin(0.5, 1)
         .setScale(scale)
         .setDepth(5);
-      const x = width + go.displayWidth * 0.5 + px(8);
+      this.spikes5Count += 1;
+      const withBait = this.spikes5Count % BAIT_EVERY_SPIKES5 === 0;
+      // Push the strip further right so the bait key scrolls in from the edge
+      // (otherwise bait pops onto mid-screen when the pair spawns).
+      const x =
+        width +
+        go.displayWidth * 0.5 +
+        px(8) +
+        (withBait ? BAIT_LEAD_PX : 0);
       go.setX(x);
       this.obstacles.push({
         go,
@@ -681,7 +689,11 @@ export class PlayScene extends Phaser.Scene {
         freq: 0,
         arm: 0,
       });
-      this.attachKeyForObstacle(kind, x);
+      if (withBait) {
+        this.spawnKeyAt(x - BAIT_LEAD_PX, this.groundY - KEY_JUMP_OFF, true);
+      } else {
+        this.spawnKeyAt(x, this.groundY - KEY_JUMP_OFF);
+      }
       return;
     }
 
@@ -774,15 +786,8 @@ export class PlayScene extends Phaser.Scene {
     }
 
     if (kind === "spikes5") {
-      this.spikes5Count += 1;
-      if (this.spikes5Count % BAIT_EVERY_SPIKES5 === 0) {
-        this.spawnKeyAt(
-          trapX - BAIT_LEAD_PX,
-          this.groundY - KEY_JUMP_OFF,
-          true,
-        );
-        return;
-      }
+      // Counted + keyed in spawnObstacle (bait needs off-screen lead)
+      return;
     }
 
     this.spawnKeyAt(trapX, this.groundY - KEY_JUMP_OFF);
