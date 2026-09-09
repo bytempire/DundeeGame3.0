@@ -156,7 +156,10 @@ export class BossBattleScene extends Phaser.Scene {
       frameWidth: 512,
       frameHeight: 512,
     });
-    this.load.json(`bb-cfg-${this.bossId}`, `${base}/${this.bossId}/battle.json`);
+    this.load.json(
+      `bb-cfg-${this.bossId}`,
+      `${base}/${this.bossId}/battle.json?v=atk2`,
+    );
   }
 
   create() {
