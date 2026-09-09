@@ -7,9 +7,14 @@ import {
 } from "../ui/notebookBg";
 import { DPR, fontPx, px } from "../ui/dpr";
 
+/** Splash stays on screen this long so the load screen is always visible. */
+const BOOT_MIN_MS = 5000;
+
 export class BootScene extends Phaser.Scene {
   private barFill!: Phaser.GameObjects.Rectangle;
   private barWidth = 0;
+  private assetsReady = false;
+  private splashDone = false;
 
   constructor() {
     super("boot");
@@ -28,6 +33,8 @@ export class BootScene extends Phaser.Scene {
   create() {
     const { width, height } = this.scale;
     addNotebookBackground(this);
+    this.assetsReady = false;
+    this.splashDone = false;
 
     this.textures
       .get("crocodile-trick")
@@ -86,20 +93,25 @@ export class BootScene extends Phaser.Scene {
       .setFillStyle(0xf4f1e8, 1);
 
     this.barFill = this.add
-      .rectangle(
-        width / 2 - this.barWidth / 2,
-        barY,
-        1,
-        barH,
-        ink,
-        0.9,
-      )
+      .rectangle(width / 2 - this.barWidth / 2, barY, 1, barH, ink, 0.9)
       .setOrigin(0, 0.5);
+
+    // Smooth 5s fill so the splash always reads clearly (even with cached assets)
+    this.tweens.add({
+      targets: this.barFill,
+      width: this.barWidth,
+      duration: BOOT_MIN_MS,
+      ease: "Sine.easeInOut",
+      onComplete: () => {
+        this.splashDone = true;
+        this.tryEnterMenu();
+      },
+    });
 
     this.loadRest();
   }
 
-  /** Phase 2 — remaining assets with a visible progress line. */
+  /** Phase 2 — remaining assets in the background while the bar animates. */
   private loadRest() {
     const base = import.meta.env.BASE_URL;
 
@@ -120,15 +132,17 @@ export class BootScene extends Phaser.Scene {
     this.load.image("spikes5", `${base}assets/spikes_5.png`);
     this.load.image("pendulum", `${base}assets/pendulum.png`);
 
-    this.load.on("progress", (value: number) => {
-      this.barFill.width = Math.max(1, this.barWidth * value);
-    });
-
     this.load.once("complete", () => {
-      this.finishBoot();
+      this.assetsReady = true;
+      this.tryEnterMenu();
     });
 
     this.load.start();
+  }
+
+  private tryEnterMenu() {
+    if (!this.assetsReady || !this.splashDone) return;
+    this.finishBoot();
   }
 
   private finishBoot() {
