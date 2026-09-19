@@ -67,9 +67,16 @@ type Obstacle = {
   arm: number; // pivot → ball center (world px)
 };
 
+/** Puck is not right after spikes5 — jump-land then mid flyer was unfair. */
 const OBSTACLE_CYCLE: Array<
   "saw" | "spikes" | "pendulum" | "spikes5" | "puck"
-> = ["saw", "spikes", "pendulum", "spikes5", "puck"];
+> = ["saw", "spikes", "puck", "pendulum", "spikes5"];
+/** Min gap from an on-screen obstacle's right edge to the next spawn center. */
+const MIN_SPAWN_GAP_PX = 360 * DPR;
+/** Puck closes faster — needs more lead after a ground trap. */
+const PUCK_SPAWN_GAP_PX = 520 * DPR;
+/** Extra wait (ms) after baited wide spikes so the jump can land first. */
+const BAIT_SPIKES5_EXTRA_GAP_MS = 900;
 
 type Pickup = {
   go: Phaser.GameObjects.Image;
@@ -601,8 +608,19 @@ export class PlayScene extends Phaser.Scene {
     }
   }
 
-  private spawnObstacle() {
+  /** Spawn X far enough past any obstacle still on screen (esp. baited spikes5). */
+  private nextSpawnX(halfW: number, minGap = MIN_SPAWN_GAP_PX): number {
     const { width } = this.scale;
+    let x = width + halfW + px(8);
+    for (const o of this.obstacles) {
+      const right =
+        o.go.x + Math.max(o.hw, o.r, o.go.displayWidth * 0.5, o.arm * 0.35);
+      x = Math.max(x, right + minGap + halfW);
+    }
+    return x;
+  }
+
+  private spawnObstacle() {
     const kind = OBSTACLE_CYCLE[this.obstacleIdx % OBSTACLE_CYCLE.length]!;
     this.obstacleIdx += 1;
 
@@ -611,7 +629,7 @@ export class PlayScene extends Phaser.Scene {
       const r = 96 * scale * 0.42;
       const y = this.groundY - r - px(2);
       const go = this.add.image(0, y, "saw").setScale(scale).setDepth(5);
-      const x = width + go.displayWidth * 0.5 + px(8);
+      const x = this.nextSpawnX(go.displayWidth * 0.5);
       go.setX(x);
       const spin = 180 + this.rng() * 220;
       this.obstacles.push({
@@ -639,7 +657,7 @@ export class PlayScene extends Phaser.Scene {
         .setOrigin(0.5, 1)
         .setScale(scale)
         .setDepth(5);
-      const x = width + go.displayWidth * 0.5 + px(8);
+      const x = this.nextSpawnX(go.displayWidth * 0.5);
       go.setX(x);
       this.obstacles.push({
         go,
@@ -672,9 +690,7 @@ export class PlayScene extends Phaser.Scene {
       // Push the strip further right so the bait key scrolls in from the edge
       // (otherwise bait pops onto mid-screen when the pair spawns).
       const x =
-        width +
-        go.displayWidth * 0.5 +
-        px(8) +
+        this.nextSpawnX(go.displayWidth * 0.5) +
         (withBait ? BAIT_LEAD_PX : 0);
       go.setX(x);
       this.obstacles.push({
@@ -691,6 +707,8 @@ export class PlayScene extends Phaser.Scene {
       });
       if (withBait) {
         this.spawnKeyAt(x - BAIT_LEAD_PX, this.groundY - KEY_JUMP_OFF, true);
+        // Timer already reset — hold the next obstacle until the jump lands.
+        this.spawnAcc = -BAIT_SPIKES5_EXTRA_GAP_MS;
       } else {
         this.spawnKeyAt(x, this.groundY - KEY_JUMP_OFF);
       }
@@ -706,7 +724,7 @@ export class PlayScene extends Phaser.Scene {
         .image(0, y, "puck-fly")
         .setScale(scale)
         .setDepth(6);
-      const x = width + go.displayWidth * 0.5 + px(8);
+      const x = this.nextSpawnX(go.displayWidth * 0.5, PUCK_SPAWN_GAP_PX);
       go.setX(x);
       this.obstacles.push({
         go,
@@ -735,7 +753,7 @@ export class PlayScene extends Phaser.Scene {
       .setOrigin(0.5, 0)
       .setScale(scale)
       .setDepth(5);
-    const x = width + go.displayWidth * 0.5 + px(8);
+    const x = this.nextSpawnX(go.displayWidth * 0.5);
     go.setX(x);
     this.obstacles.push({
       go,
