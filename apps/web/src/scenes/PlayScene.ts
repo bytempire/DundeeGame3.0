@@ -541,8 +541,7 @@ export class PlayScene extends Phaser.Scene {
         (bossAt !== null
           ? `\nДо босса: ${Math.max(0, Math.ceil(bossAt - this.distance))} м`
           : "") +
-        `\nКлючи: ${this.pickupCoins}\nПопытки: ${this.freeLeft()}` +
-        (this.extraRevives > 0 ? ` + ${this.extraRevives}` : ""),
+        `\nКлючи: ${this.pickupCoins}\nПопытки: ${this.freeLeft() + this.extraRevives}`,
     );
   }
 
