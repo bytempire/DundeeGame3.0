@@ -54,20 +54,25 @@ bot.command("start", async (ctx) => {
     console.error("upsert failed", err);
   }
 
-  await ctx.reply(
-    [
-      "🐊 *Dundee Runner*",
-      "",
-      "Беги, прыгай, собирай ключики — меняй их на дни VPN.",
-      "Продолжить забег можно за Telegram Stars.",
-      "",
-      `VPN: @${env.VPN_BOT_USERNAME}`,
-    ].join("\n"),
-    {
-      parse_mode: "Markdown",
-      reply_markup: playKeyboard(),
-    },
-  );
+  const text = [
+    "🐊 Dundee Runner",
+    "",
+    "Беги, прыгай, собирай ключики — меняй их на дни VPN.",
+    "Продолжить забег можно за Telegram Stars.",
+    "",
+    `VPN: @${env.VPN_BOT_USERNAME}`,
+  ].join("\n");
+
+  try {
+    await ctx.reply(text, { reply_markup: playKeyboard() });
+  } catch (err) {
+    console.error("start reply failed", err);
+    try {
+      await ctx.reply(text);
+    } catch (err2) {
+      console.error("start plain reply failed", err2);
+    }
+  }
 });
 
 bot.command("play", async (ctx) => {
