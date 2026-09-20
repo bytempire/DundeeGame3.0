@@ -16,7 +16,7 @@ export function bossTextureKey(bossId: string) {
 }
 
 export function bossConfigKey(bossId: string) {
-  return `bb-cfg-${bossId}`;
+  return `bb-cfg-${bossId}-atk3`;
 }
 
 export function bossTrickKey(bossId: BossId) {
@@ -59,7 +59,7 @@ export function queueBossBattleAssets(scene: Phaser.Scene, onlyId?: BossId) {
     }
     const cfg = bossConfigKey(boss.id);
     if (!cache.json.exists(cfg)) {
-      load.json(cfg, `${base}/${boss.id}/battle.json?v=atk2`);
+      load.json(cfg, `${base}/${boss.id}/battle.json?v=atk3`);
     }
   }
 }

@@ -32,7 +32,7 @@
     "powerEvery": 3,
     "power": {
       "kind": "ram",
-      "gapMs": 450,
+      "gapMs": 920,
       "projectile": "puck_heavy"
     }
   },
@@ -46,6 +46,6 @@
     "heroJumpDurationMs": 850,
     "minimumOppositeLaneArrivalGapMs": 700
   },
-  "behaviorNotes": "Тяжёлая шайба. Каждые 3 удара — таран: heavy low + heavy high подряд (~450 мс), прыжок сразу в присед.",
+  "behaviorNotes": "Тяжёлая шайба. Каждые 3 удара — таран: heavy low + heavy high (~920 мс), прыжок → присед.",
   "prototypeValues": true
 }
