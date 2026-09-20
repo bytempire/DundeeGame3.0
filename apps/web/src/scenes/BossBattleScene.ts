@@ -104,6 +104,12 @@ export class BossBattleScene extends Phaser.Scene {
   private emitLane: Lane | "mid" = "low";
   private pendingPower = false;
   private attackCounter = 0;
+  /** Second swing of double/ram/volley — full stick windup before emit. */
+  private powerFollowUp: null | {
+    lane: Lane;
+    projectile?: string;
+    delayMs: number;
+  } = null;
   private laneMarker!: Phaser.GameObjects.Graphics;
   private robotShots = 0;
   private robotOverheatUntil = 0;
@@ -145,6 +151,7 @@ export class BossBattleScene extends Phaser.Scene {
     this.patternIdx = 0;
     this.attackCounter = 0;
     this.pendingPower = false;
+    this.powerFollowUp = null;
     this.emitLane = "low";
     this.robotShots = 0;
     this.robotOverheatUntil = 0;
@@ -596,9 +603,16 @@ export class BossBattleScene extends Phaser.Scene {
         this.statusText.setText("Двойной!");
       else if (kind === "volley") this.statusText.setText("Залп!");
     }
+    this.nextBossAt = Number.POSITIVE_INFINITY;
+    this.playBossSwing(() => this.resolveBossEmit(), () =>
+      this.onBossSwingComplete(),
+    );
+  }
+
+  /** Full stick attack anim; emit callback fires on the strike frame. */
+  private playBossSwing(onEmit: () => void, onComplete: () => void) {
     this.bossBusy = true;
     this.boss.play("bb-boss-attack");
-
     let emitted = false;
     const onUpdate = (
       _a: Phaser.Animations.Animation,
@@ -607,43 +621,66 @@ export class BossBattleScene extends Phaser.Scene {
       if (emitted) return;
       if (Number(frame.textureFrame) === BF.attack[2]) {
         emitted = true;
-        this.resolveBossEmit();
-        // Keep power telegraph until multi-puck follow-ups redraw/clear it
-        if (!this.pendingPower) this.laneMarker.clear();
-        else if (this.cfg.boss.power?.kind === "icebreaker") {
-          this.time.delayedCall(280, () => this.laneMarker.clear());
-        } else if (this.cfg.boss.power?.kind === "volley") {
-          this.laneMarker.clear();
-        }
+        onEmit();
       }
     };
     this.boss.on("animationupdate", onUpdate);
     this.boss.once("animationcomplete", () => {
       this.boss.off("animationupdate", onUpdate);
-      this.bossBusy = false;
-      if (!this.bossDead) this.boss.play("bb-boss-idle", true);
-
-      if (this.bossId === "robot") {
-        this.robotShots += 1;
-        const burst = this.cfg.robot?.shotsPerBurst ?? 3;
-        const gap = this.cfg.robot?.shotIntervalMs ?? 1200;
-        if (this.robotShots >= burst) {
-          this.robotShots = 0;
-          this.robotOverheatUntil =
-            this.time.now + (this.cfg.robot?.overheatMs ?? 1600);
-          this.robotArmored = false;
-          this.nextBossAt =
-            this.robotOverheatUntil + this.cfg.boss.attackCooldownMs * 0.35;
-        } else {
-          this.nextBossAt = this.time.now + gap;
-        }
-      } else {
-        this.nextBossAt = this.time.now + this.cfg.boss.attackCooldownMs;
-      }
+      onComplete();
     });
+  }
 
-    // Windup already baked into attack frames; schedule next after cooldown from complete
-    this.nextBossAt = Number.POSITIVE_INFINITY;
+  private onBossSwingComplete() {
+    if (this.powerFollowUp) {
+      const follow = this.powerFollowUp;
+      this.powerFollowUp = null;
+      this.time.delayedCall(follow.delayMs, () => {
+        if (this.ended || this.heroDead || this.bossDead) {
+          this.finishBossAttackCycle();
+          return;
+        }
+        this.pendingLane = follow.lane;
+        this.emitLane = follow.lane;
+        this.showLaneHint(follow.lane, true);
+        this.playBossSwing(
+          () => {
+            this.emitBossPuck(follow.lane, follow.projectile);
+            if (follow.projectile === "puck_heavy") {
+              this.cameras.main.shake(100, 0.006);
+            }
+            this.time.delayedCall(220, () => this.laneMarker.clear());
+          },
+          () => this.finishBossAttackCycle(),
+        );
+      });
+      return;
+    }
+    this.finishBossAttackCycle();
+  }
+
+  private finishBossAttackCycle() {
+    this.bossBusy = false;
+    this.pendingPower = false;
+    if (!this.bossDead && !this.ended) this.boss.play("bb-boss-idle", true);
+
+    if (this.bossId === "robot") {
+      this.robotShots += 1;
+      const burst = this.cfg.robot?.shotsPerBurst ?? 3;
+      const gap = this.cfg.robot?.shotIntervalMs ?? 1200;
+      if (this.robotShots >= burst) {
+        this.robotShots = 0;
+        this.robotOverheatUntil =
+          this.time.now + (this.cfg.robot?.overheatMs ?? 1600);
+        this.robotArmored = false;
+        this.nextBossAt =
+          this.robotOverheatUntil + this.cfg.boss.attackCooldownMs * 0.35;
+      } else {
+        this.nextBossAt = this.time.now + gap;
+      }
+    } else {
+      this.nextBossAt = this.time.now + this.cfg.boss.attackCooldownMs;
+    }
   }
 
   private effectivePowerEvery(): number {
@@ -705,44 +742,43 @@ export class BossBattleScene extends Phaser.Scene {
       } else {
         this.emitBossPuck(this.emitLane);
       }
+      this.laneMarker.clear();
       return;
     }
 
     const gap = power.gapMs ?? 280;
     const proj = power.projectile;
+    // Strike frame is BF.attack[2]; ~2 frames × 120ms before emit on the follow-up swing
+    const windupToEmitMs = 240;
 
     if (power.kind === "double") {
       this.emitBossPuck("low");
       this.cameras.main.shake(80, 0.004);
-      this.time.delayedCall(this.oppositeLaneGapMs(gap), () => {
-        if (this.ended || this.heroDead) return;
-        this.emitBossPuck("high");
-        this.showLaneHint("high", true);
-        this.time.delayedCall(220, () => this.laneMarker.clear());
-      });
+      this.powerFollowUp = {
+        lane: "high",
+        delayMs: Math.max(120, this.oppositeLaneGapMs(gap) - windupToEmitMs),
+      };
       return;
     }
 
     if (power.kind === "volley") {
       const lane = this.emitLane === "mid" ? "high" : this.emitLane;
       this.emitBossPuck(lane);
-      this.time.delayedCall(gap, () => {
-        if (this.ended || this.heroDead) return;
-        this.emitBossPuck(lane);
-      });
+      this.powerFollowUp = {
+        lane,
+        delayMs: Math.max(80, gap - windupToEmitMs),
+      };
       return;
     }
 
     if (power.kind === "ram") {
       this.emitBossPuck("low", proj ?? "puck_heavy");
       this.cameras.main.shake(120, 0.008);
-      this.time.delayedCall(this.oppositeLaneGapMs(gap), () => {
-        if (this.ended || this.heroDead) return;
-        this.emitBossPuck("high", proj ?? "puck_heavy");
-        this.cameras.main.shake(100, 0.006);
-        this.showLaneHint("high", true);
-        this.time.delayedCall(220, () => this.laneMarker.clear());
-      });
+      this.powerFollowUp = {
+        lane: "high",
+        projectile: proj ?? "puck_heavy",
+        delayMs: Math.max(120, this.oppositeLaneGapMs(gap) - windupToEmitMs),
+      };
       return;
     }
 
@@ -762,10 +798,12 @@ export class BossBattleScene extends Phaser.Scene {
     if (power.kind === "icebreaker") {
       this.emitBossPuck("mid", proj ?? "puck_energy");
       this.cameras.main.shake(140, 0.01);
+      this.time.delayedCall(280, () => this.laneMarker.clear());
       return;
     }
 
     this.emitBossPuck(this.emitLane === "mid" ? "high" : this.emitLane);
+    this.laneMarker.clear();
   }
 
   private showLaneHint(lane: Lane, power = false) {
@@ -1041,6 +1079,8 @@ export class BossBattleScene extends Phaser.Scene {
   private playBossHurt() {
     this.boss.off("animationupdate");
     this.boss.removeAllListeners("animationcomplete");
+    this.powerFollowUp = null;
+    this.pendingPower = false;
     this.laneMarker.clear();
     if (
       this.cfg.boss.interruptAttackOnHurt ||
