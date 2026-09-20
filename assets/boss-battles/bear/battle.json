@@ -28,7 +28,12 @@
     ],
     "faceLeftByFlipping": true,
     "emitOnAttackFrameIndex": 2,
-    "interruptAttackOnHurt": true
+    "interruptAttackOnHurt": true,
+    "powerEvery": 4,
+    "power": {
+      "kind": "double",
+      "gapMs": 280
+    }
   },
   "arena": {
     "referenceWidth": 960,
@@ -40,6 +45,6 @@
     "heroJumpDurationMs": 850,
     "minimumOppositeLaneArrivalGapMs": 700
   },
-  "behaviorNotes": "Учебный бой. Чередовать низкую и высокую шайбу, без серий. Низкую перепрыгивать, от высокой пригибаться.",
+  "behaviorNotes": "Учебный бой. Чередовать низкую и высокую шайбу. Каждые 4 удара — двойной рикошет low→high (~280 мс): прыжок, затем присед.",
   "prototypeValues": true
 }

@@ -30,7 +30,11 @@
     ],
     "faceLeftByFlipping": true,
     "emitOnAttackFrameIndex": 2,
-    "interruptAttackOnHurt": true
+    "interruptAttackOnHurt": true,
+    "powerEvery": 2,
+    "power": {
+      "kind": "fake"
+    }
   },
   "arena": {
     "referenceWidth": 960,
@@ -42,6 +46,6 @@
     "heroJumpDurationMs": 850,
     "minimumOppositeLaneArrivalGapMs": 700
   },
-  "behaviorNotes": "Ложный замах верхней клюшкой в attack_02; реальный выстрел нижней клюшкой в attack_03. Не создавать снаряд на ложном замахе.",
+  "behaviorNotes": "Каждые 2 удара — фокус: подсказка линии врёт, реальный выстрел в противоположную. Не верь первой линии.",
   "prototypeValues": true
 }

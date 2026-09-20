@@ -28,7 +28,13 @@
     ],
     "faceLeftByFlipping": true,
     "emitOnAttackFrameIndex": 2,
-    "interruptAttackOnHurt": true
+    "interruptAttackOnHurt": true,
+    "powerEvery": 3,
+    "power": {
+      "kind": "ram",
+      "gapMs": 450,
+      "projectile": "puck_heavy"
+    }
   },
   "arena": {
     "referenceWidth": 960,
@@ -40,6 +46,6 @@
     "heroJumpDurationMs": 850,
     "minimumOppositeLaneArrivalGapMs": 700
   },
-  "behaviorNotes": "Тяжёлая низкая шайба, затем высокая. Между противоположными уклонениями оставлять не меньше 700 мс после прохождения предыдущей шайбы мимо героя.",
+  "behaviorNotes": "Тяжёлая шайба. Каждые 3 удара — таран: heavy low + heavy high подряд (~450 мс), прыжок сразу в присед.",
   "prototypeValues": true
 }
