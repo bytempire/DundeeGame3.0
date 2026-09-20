@@ -33,7 +33,8 @@
     "interruptAttackOnHurt": true,
     "powerEvery": 2,
     "power": {
-      "kind": "fake"
+      "kind": "fake",
+      "gapMs": 90
     }
   },
   "arena": {
@@ -46,6 +47,6 @@
     "heroJumpDurationMs": 850,
     "minimumOppositeLaneArrivalGapMs": 700
   },
-  "behaviorNotes": "Каждые 2 удара — фокус: подсказка линии врёт, реальный выстрел в противоположную. Не верь первой линии.",
+  "behaviorNotes": "Каждые 2 удара — фокус: ложная шайба по подсказке + реальная в другую линию. Не верь золотой линии.",
   "prototypeValues": true
 }

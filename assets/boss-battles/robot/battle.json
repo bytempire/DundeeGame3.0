@@ -46,7 +46,7 @@
     "heroJumpDurationMs": 850,
     "minimumOppositeLaneArrivalGapMs": 700
   },
-  "behaviorNotes": "Серия из трёх выстрелов; 3-й — средняя энергия (прыжок или присед). После серии перегрев. Вне перегрева попадания — искры без HP.",
+  "behaviorNotes": "Серия из трёх выстрелов; 3-й — ледокол по середине: только прыжок (присед не спасает). После серии перегрев.",
   "prototypeValues": true,
   "robot": {
     "shotsPerBurst": 3,

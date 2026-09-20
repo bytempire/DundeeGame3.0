@@ -32,7 +32,7 @@
     "powerEvery": 4,
     "power": {
       "kind": "double",
-      "gapMs": 280
+      "gapMs": 820
     }
   },
   "arena": {
@@ -45,6 +45,6 @@
     "heroJumpDurationMs": 850,
     "minimumOppositeLaneArrivalGapMs": 700
   },
-  "behaviorNotes": "Учебный бой. Чередовать низкую и высокую шайбу. Каждые 4 удара — двойной рикошет low→high (~280 мс): прыжок, затем присед.",
+  "behaviorNotes": "Учебный бой. Каждые 4 удара — двойной рикошет low→high (~820 мс): успеть приземлиться и присесть.",
   "prototypeValues": true
 }
