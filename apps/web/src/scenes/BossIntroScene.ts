@@ -130,6 +130,19 @@ export class BossIntroScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
+    if (def?.notes) {
+      this.add
+        .text(width / 2, height * 0.24, def.notes, {
+          fontFamily: "Georgia, 'Times New Roman', serif",
+          fontSize: fontPx(13),
+          color: NOTEBOOK_INK,
+          fontStyle: "italic",
+          align: "center",
+          wordWrap: { width: width * 0.86 },
+        })
+        .setOrigin(0.5);
+    }
+
     const groundY = height * 0.72;
     this.add
       .tileSprite(width / 2, groundY + 12 * DPR, width + 4, 24 * DPR, "platform")

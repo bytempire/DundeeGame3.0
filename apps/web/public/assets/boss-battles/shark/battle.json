@@ -29,7 +29,12 @@
     ],
     "faceLeftByFlipping": true,
     "emitOnAttackFrameIndex": 2,
-    "interruptAttackOnHurt": true
+    "interruptAttackOnHurt": true,
+    "powerEvery": 3,
+    "power": {
+      "kind": "volley",
+      "gapMs": 140
+    }
   },
   "arena": {
     "referenceWidth": 960,
@@ -41,6 +46,6 @@
     "heroJumpDurationMs": 850,
     "minimumOppositeLaneArrivalGapMs": 700
   },
-  "behaviorNotes": "Быстрее медведя. Во время замаха зафиксировать высоту выстрела; после выпуска не перенаводить шайбу на героя.",
+  "behaviorNotes": "Быстрее медведя. Каждые 3 удара — снайперский залп: две шайбы в одну линию с коротким интервалом.",
   "prototypeValues": true
 }

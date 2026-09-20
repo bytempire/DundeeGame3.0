@@ -29,7 +29,12 @@
     ],
     "faceLeftByFlipping": true,
     "emitOnAttackFrameIndex": 2,
-    "interruptAttackOnHurt": false
+    "interruptAttackOnHurt": false,
+    "powerEvery": 0,
+    "power": {
+      "kind": "icebreaker",
+      "projectile": "puck_energy"
+    }
   },
   "arena": {
     "referenceWidth": 960,
@@ -41,7 +46,7 @@
     "heroJumpDurationMs": 850,
     "minimumOppositeLaneArrivalGapMs": 700
   },
-  "behaviorNotes": "Серия из трёх выстрелов. Между ними не меньше 900 мс; каждый выстрел имеет свой замах. После серии 1600 мс перегрева. Вне перегрева попадания дают искры без снижения HP; в перегреве работают hurt и урон.",
+  "behaviorNotes": "Серия из трёх выстрелов; 3-й — средняя энергия (прыжок или присед). После серии перегрев. Вне перегрева попадания — искры без HP.",
   "prototypeValues": true,
   "robot": {
     "shotsPerBurst": 3,

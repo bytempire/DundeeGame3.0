@@ -98,6 +98,10 @@ export class BossBattleScene extends Phaser.Scene {
   private patternIdx = 0;
   private nextBossAt = 0;
   private pendingLane: Lane = "low";
+  /** Actual emit lane (octopus fake can differ from pendingLane hint). */
+  private emitLane: Lane | "mid" = "low";
+  private pendingPower = false;
+  private attackCounter = 0;
   private laneMarker!: Phaser.GameObjects.Graphics;
   private robotShots = 0;
   private robotOverheatUntil = 0;
@@ -137,6 +141,9 @@ export class BossBattleScene extends Phaser.Scene {
     this.heroVy = 0;
     this.heroAirY = 0;
     this.patternIdx = 0;
+    this.attackCounter = 0;
+    this.pendingPower = false;
+    this.emitLane = "low";
     this.robotShots = 0;
     this.robotOverheatUntil = 0;
     this.robotArmored = true;
@@ -568,10 +575,8 @@ export class BossBattleScene extends Phaser.Scene {
     }
     if (now < this.nextBossAt) return;
 
-    const pattern = this.cfg.boss.lanePattern;
-    this.pendingLane = pattern[this.patternIdx % pattern.length]!;
-    this.patternIdx += 1;
-    this.showLaneHint(this.pendingLane);
+    this.prepareBossAttack();
+    this.showLaneHint(this.pendingLane, this.pendingPower);
     this.bossBusy = true;
     this.boss.play("bb-boss-attack");
 
@@ -583,7 +588,7 @@ export class BossBattleScene extends Phaser.Scene {
       if (emitted) return;
       if (Number(frame.textureFrame) === BF.attack[2]) {
         emitted = true;
-        this.emitBossPuck(this.pendingLane);
+        this.resolveBossEmit();
         this.laneMarker.clear();
       }
     };
@@ -616,27 +621,138 @@ export class BossBattleScene extends Phaser.Scene {
     this.nextBossAt = Number.POSITIVE_INFINITY;
   }
 
-  private showLaneHint(lane: Lane) {
-    const y = lane === "low" ? this.lowY : this.highY;
+  private effectivePowerEvery(): number {
+    const every = this.cfg.boss.powerEvery ?? 0;
+    if (every <= 0) return 0;
+    if (this.bossHp <= this.bossHpMax * 0.5) return Math.max(2, every - 1);
+    return every;
+  }
+
+  private prepareBossAttack() {
+    const pattern = this.cfg.boss.lanePattern;
+    const lane = pattern[this.patternIdx % pattern.length]!;
+    this.patternIdx += 1;
+    this.pendingLane = lane;
+    this.emitLane = lane;
+    this.pendingPower = false;
+
+    // Robot: last shot of each burst is icebreaker mid puck
+    if (this.bossId === "robot") {
+      const burst = this.cfg.robot?.shotsPerBurst ?? 3;
+      if (this.robotShots === burst - 1) {
+        this.pendingPower = true;
+        this.emitLane = "mid";
+        this.pendingLane = "high"; // telegraph mid as high line + power color
+      }
+      return;
+    }
+
+    const every = this.effectivePowerEvery();
+    if (every <= 0 || !this.cfg.boss.power) return;
+    this.attackCounter += 1;
+    if (this.attackCounter % every !== 0) return;
+
+    this.pendingPower = true;
+    const kind = this.cfg.boss.power.kind;
+    if (kind === "fake") {
+      this.emitLane = lane === "high" ? "low" : "high";
+      // Hint stays on pendingLane (lie)
+    } else if (kind === "double" || kind === "ram") {
+      this.pendingLane = "low";
+      this.emitLane = "low";
+    }
+  }
+
+  private resolveBossEmit() {
+    const power = this.cfg.boss.power;
+    if (!this.pendingPower || !power) {
+      if (this.emitLane === "mid") {
+        this.emitBossPuck("mid");
+      } else {
+        this.emitBossPuck(this.emitLane);
+      }
+      return;
+    }
+
+    const gap = power.gapMs ?? 280;
+    const proj = power.projectile;
+
+    if (power.kind === "double") {
+      this.emitBossPuck("low");
+      this.cameras.main.shake(80, 0.004);
+      this.time.delayedCall(gap, () => {
+        if (this.ended || this.heroDead) return;
+        this.emitBossPuck("high");
+      });
+      return;
+    }
+
+    if (power.kind === "volley") {
+      const lane = this.emitLane === "mid" ? "high" : this.emitLane;
+      this.emitBossPuck(lane);
+      this.time.delayedCall(gap, () => {
+        if (this.ended || this.heroDead) return;
+        this.emitBossPuck(lane);
+      });
+      return;
+    }
+
+    if (power.kind === "ram") {
+      this.emitBossPuck("low", proj ?? "puck_heavy");
+      this.cameras.main.shake(120, 0.008);
+      this.time.delayedCall(gap, () => {
+        if (this.ended || this.heroDead) return;
+        this.emitBossPuck("high", proj ?? "puck_heavy");
+        this.cameras.main.shake(100, 0.006);
+      });
+      return;
+    }
+
+    if (power.kind === "fake") {
+      this.emitBossPuck(this.emitLane === "mid" ? "low" : this.emitLane);
+      return;
+    }
+
+    if (power.kind === "icebreaker") {
+      this.emitBossPuck("mid", proj ?? "puck_energy");
+      this.cameras.main.shake(100, 0.007);
+      return;
+    }
+
+    this.emitBossPuck(this.emitLane === "mid" ? "high" : this.emitLane);
+  }
+
+  private showLaneHint(lane: Lane, power = false) {
+    const y =
+      this.emitLane === "mid"
+        ? (this.lowY + this.highY) * 0.5
+        : lane === "low"
+          ? this.lowY
+          : this.highY;
+    const color = power ? 0xd4a017 : 0xc0392b;
     this.laneMarker.clear();
-    this.laneMarker.lineStyle(3, 0xc0392b, 0.55);
-    this.laneMarker.strokeCircle(this.heroX + 40, y, 14);
-    this.laneMarker.lineStyle(2, 0xc0392b, 0.35);
+    this.laneMarker.lineStyle(3, color, power ? 0.75 : 0.55);
+    this.laneMarker.strokeCircle(this.heroX + 40, y, power ? 18 : 14);
+    this.laneMarker.lineStyle(2, color, power ? 0.5 : 0.35);
     this.laneMarker.lineBetween(this.bossX - 40, y, this.heroX + 60, y);
   }
 
-  private emitBossPuck(lane: Lane) {
-    const y = lane === "low" ? this.lowY : this.highY;
+  private emitBossPuck(lane: Lane | "mid", projectile?: string) {
+    const y =
+      lane === "mid"
+        ? (this.lowY + this.highY) * 0.5
+        : lane === "low"
+          ? this.lowY
+          : this.highY;
+    const projKey = projectile ?? this.cfg.boss.projectile;
     const frame =
-      FX[this.cfg.boss.projectile as keyof typeof FX] ?? FX.puck_enemy;
+      FX[projKey as keyof typeof FX] ?? FX.puck_enemy;
     const frameIdx = typeof frame === "number" ? frame : FX.puck_enemy;
+    const heavy = projKey === "puck_heavy" || projKey === "puck_energy";
     const img = this.add
       .image(this.bossX - 40 * this.spriteScale, y, FX_KEY, frameIdx)
       .setOrigin(0.5)
-      .setScale(
-        this.spriteScale *
-          (this.cfg.boss.projectile === "puck_heavy" ? 1.15 : 0.95),
-      )
+      .setScale(this.spriteScale * (heavy ? 1.15 : 0.95))
       .setDepth(12);
     const dist = Math.abs(this.bossX - this.heroX);
     const base = this.cfg.boss.projectileSpeedPxPerSec;
@@ -647,7 +763,7 @@ export class BossBattleScene extends Phaser.Scene {
       vy: 0,
       fromHero: false,
       lane,
-      r: 24 * this.spriteScale,
+      r: 24 * this.spriteScale * (heavy ? 1.08 : 1),
       prevX: img.x,
       prevY: img.y,
     });
@@ -751,9 +867,18 @@ export class BossBattleScene extends Phaser.Scene {
 
   private hitHero(p: Puck) {
     if (this.heroInvuln > 0) return false;
-    // High puck clears ducked head; low puck clears jumped feet
-    if (p.lane === "high" && this.ducking) return false;
-    if (
+    // Mid energy: duck OR jump clears; standing takes the hit
+    if (p.lane === "mid") {
+      if (this.ducking) return false;
+      if (
+        this.jumping &&
+        this.heroAirY < -55 * this.spriteScale
+      ) {
+        return false;
+      }
+    } else if (p.lane === "high" && this.ducking) {
+      return false;
+    } else if (
       p.lane === "low" &&
       this.jumping &&
       this.heroAirY < -55 * this.spriteScale

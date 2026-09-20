@@ -8,36 +8,51 @@ export type BossDef = {
   notes: string;
 };
 
+export type PowerKind =
+  | "double"
+  | "volley"
+  | "ram"
+  | "fake"
+  | "icebreaker";
+
+export type BossPowerAttack = {
+  kind: PowerKind;
+  /** Extra delay between multi-puck shots (ms). */
+  gapMs?: number;
+  /** Override projectile FX key for this power. */
+  projectile?: string;
+};
+
 export const BOSSES: BossDef[] = [
   {
     id: "bear",
     name: "Медведь «Вратарь»",
     color: "#f58c35",
-    notes: "Учебный бой: низкая / высокая шайба",
+    notes: "Учебный бой; иногда двойной удар low→high",
   },
   {
     id: "shark",
     name: "Акула «Снайпер»",
     color: "#ef4555",
-    notes: "Быстрее и точнее",
+    notes: "Быстрее; снайперский залп в одну линию",
   },
   {
     id: "boar",
     name: "Кабан «Таран»",
     color: "#a066ea",
-    notes: "Тяжёлая шайба",
+    notes: "Тяжёлая шайба; таран low+high подряд",
   },
   {
     id: "octopus",
     name: "Осьминог «Фокусник»",
     color: "#20cdd1",
-    notes: "Ложный замах — жди нижний удар",
+    notes: "Ложный замах — не верь подсказке линии",
   },
   {
     id: "robot",
     name: "Робот «Ледокол»",
     color: "#f4c52c",
-    notes: "Броня; урон только в перегреве",
+    notes: "Броня; 3-й выстрел серии — средняя энергия",
   },
 ];
 
@@ -59,6 +74,9 @@ export type BattleConfig = {
     projectileSpeedPxPerSec: number;
     lanePattern: Lane[];
     interruptAttackOnHurt: boolean;
+    /** Fire a power attack every N normal shots (0 = never). Robot uses burst instead. */
+    powerEvery?: number;
+    power?: BossPowerAttack;
   };
   arena: {
     groundY: number;
